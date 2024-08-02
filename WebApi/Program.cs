@@ -83,7 +83,7 @@ try
 }
 catch (Exception)
 {
-    Console.WriteLine("Salom Adham");
+
 }
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
