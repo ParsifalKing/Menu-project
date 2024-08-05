@@ -6,7 +6,7 @@ using Domain.Entities;
 using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
-using Infrastructure.Services.CheckDishIngredientsService;
+using Infrastructure.Services.CheckIngredientsService;
 using Infrastructure.Services.NotificationService;
 using Infrastructure.Services.OrderDetailService;
 using Infrastructure.Services.TelegramService;
@@ -17,8 +17,9 @@ using Microsoft.Extensions.Logging;
 namespace Infrastructure.Services.OrderService;
 
 public class OrderService(ILogger<OrderService> logger, DataContext context, IOrderDetailService orderDetailService,
-ICheckDishIngredientsService checkDishIngredientsService, INotificationService notificationService, ITelegramService telegramService) : IOrderService
+ICheckIngredientsService checkIngredientsService, INotificationService notificationService, ITelegramService telegramService) : IOrderService
 {
+
 
     #region GetOrdersAsync
 
@@ -64,6 +65,7 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
 
     #endregion
 
+
     #region GetOrderByIdAsync
 
     public async Task<Response<GetOrderDto>> GetOrderByIdAsync(Guid orderId)
@@ -104,7 +106,7 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
     #endregion
 
 
-    #region BlockOrdering
+    #region GetBlockOrderControl
 
     public async Task<Response<GetBlockOrderControlDto>> GetBlockOrderControl()
     {
@@ -135,6 +137,32 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
     #endregion
 
 
+    #region BlockOrdering
+
+
+    public async Task<Response<string>> BlockOrderControl(UpdateBlockOrderControlDto blockOrderControlDto)
+    {
+        try
+        {
+            logger.LogInformation("Starting method BlockOrderControl in time:{DateTime} ", DateTimeOffset.UtcNow);
+
+            var blockOrderControl = await context.BlockOrderControl.FirstAsync();
+            blockOrderControl.IsBlocked = true;
+            blockOrderControl.UpdatedAt = DateTimeOffset.UtcNow;
+            await context.SaveChangesAsync();
+
+            logger.LogInformation("Finished method BlockOrderControl in time:{DateTime} ", DateTimeOffset.UtcNow);
+            return new Response<string>($"Successfully update BlockOrderControl");
+        }
+        catch (Exception e)
+        {
+            logger.LogError("Exception {Exception}, time={DateTimeNow}", e.Message, DateTimeOffset.UtcNow);
+            return new Response<string>(HttpStatusCode.InternalServerError, e.Message);
+        }
+    }
+
+    #endregion
+
 
     #region CreateOrderAsync
 
@@ -143,6 +171,12 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
         try
         {
             logger.LogInformation("Starting method CreateOrderAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
+            var checkedBlockOrdering = await context.BlockOrderControl.FirstAsync();
+            if (checkedBlockOrdering.IsBlocked == true)
+            {
+                logger.LogWarning("ordering is blocked now, in time:{DateTime}", DateTime.UtcNow);
+                return new Response<string>(HttpStatusCode.BadRequest, "Execuse, but ordering blocked now");
+            }
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == createOrder.UserId);
             foreach (var orderDetail in createOrder.OrderDetails)
             {
@@ -172,12 +206,7 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
                 logger.LogWarning("Error 400, incorrect input of property DateOfPreparingOrder : {Date}, in time:{DateTime}", createOrder.DateOfPreparingOrder, DateTime.UtcNow);
                 return new Response<string>(HttpStatusCode.BadRequest, $"Please, enter Date of preparing order correct. You can't order early that now and later that 15 days");
             }
-            var checkedBlockOrdering = await context.BlockOrderControl.FirstAsync();
-            if (checkedBlockOrdering.IsBlocked == true)
-            {
-                logger.LogWarning("ordering is blocked now, in time:{DateTime}", DateTime.UtcNow);
-                return new Response<string>(HttpStatusCode.BadRequest, "Execuse, but ordering blocked now");
-            }
+
 
             var newOrder = new Order()
             {
@@ -204,12 +233,19 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
             }
 
             // Updating (correcting) order properties
-            var totalCookingTime = await (from od in context.OrderDetails
-                                          join d in context.Dishes on od.DishId equals d.Id
-                                          where od.OrderId == order.Id
-                                          select d.CookingTimeInMinutes * od.Quantity)
+            var totalDishCookingTime = await (from od in context.OrderDetails
+                                              join d in context.Dishes on od.DishId equals d.Id
+                                              where od.OrderId == order.Id
+                                              select d.CookingTimeInMinutes * od.Quantity)
                                           .SumAsync(x => x);
-            order!.OrderTimeInMinutes = totalCookingTime + 5;
+            var totalDrinkCookingTime = await (from od in context.OrderDetails
+                                               join dr in context.Drinks on od.DrinkId equals dr.Id
+                                               where od.OrderId == order.Id
+                                               select dr.CookingTimeInMinutes * od.Quantity)
+                                          .SumAsync(x => x);
+
+            order!.OrderTimeInMinutes = totalDishCookingTime + totalDrinkCookingTime + 5;
+
             order.TotalAmount = context.OrderDetails.Where(x => x.OrderId == order.Id).Sum(x => x.UnitPrice * x.Quantity);
 
             // Decrement count of Ingredients from stock 
@@ -226,30 +262,51 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
                                               Ingredients = i,
                                               DishIngredient = di,
                                           }).AsQueryable();
-                    Guid dishId = Guid.Empty;
-                    foreach (var item in dishIngredient)
+                    if (dishIngredient != null)
                     {
-                        if (item.Ingredients.Count < item.DishIngredient.Quantity)
+                        Guid dishId = Guid.Empty;
+                        foreach (var item in dishIngredient)
                         {
-                            logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enought", item.Ingredients.Id);
-                            return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enought");
+                            if (item.Ingredients.Count < item.DishIngredient.Quantity)
+                            {
+                                logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enought", item.Ingredients.Id);
+                                return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enought");
+                            }
+                            item.Ingredients.Count -= item.DishIngredient.Quantity * orderDetail.Quantity;
+                            if (item.Ingredients.Count > 2) item.Ingredients.IsInReserve = true;
+                            else item.Ingredients.IsInReserve = false;
+                            dishId = item.DishIngredient.DishId;
                         }
-                        item.Ingredients.Count -= item.DishIngredient.Quantity * orderDetail.Quantity;
-                        if (item.Ingredients.Count > 2) item.Ingredients.IsInReserve = true;
-                        else item.Ingredients.IsInReserve = false;
-                        dishId = item.DishIngredient.DishId;
+                        await checkIngredientsService.CheckDishIngredients(dishId);
                     }
-                    await checkDishIngredientsService.CheckDishIngredients(dishId);
                 }
                 else if (orderDetail.DrinkId != null)
                 {
-                    var foundDrink = await context.Drinks.FirstOrDefaultAsync(x => x.Id == orderDetail.DrinkId);
-                    if (foundDrink!.Count < orderDetail.Quantity)
+                    var drinkIngredient = (from i in context.Ingredients
+                                           join di in context.DrinkIngredient on i.Id equals di.IngredientId
+                                           where di.DrinkId == orderDetail.DrinkId
+                                           select new
+                                           {
+                                               Ingredients = i,
+                                               DrinkIngredient = di,
+                                           }).AsQueryable();
+                    if (drinkIngredient != null)
                     {
-                        logger.LogWarning("Ups, count of drink with id:{DrinkId} not enought", orderDetail.DrinkId);
-                        return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of drink with id:{orderDetail.DrinkId} not enought");
+                        Guid drinkId = Guid.Empty;
+                        foreach (var item in drinkIngredient)
+                        {
+                            if (item.Ingredients.Count < item.DrinkIngredient.Quantity)
+                            {
+                                logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enought", item.Ingredients.Id);
+                                return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enought");
+                            }
+                            item.Ingredients.Count -= item.DrinkIngredient.Quantity * orderDetail.Quantity;
+                            if (item.Ingredients.Count > 2) item.Ingredients.IsInReserve = true;
+                            else item.Ingredients.IsInReserve = false;
+                            drinkId = item.DrinkIngredient.DrinkId;
+                        }
+                        await checkIngredientsService.CheckDrinkIngredients(drinkId);
                     }
-                    foundDrink!.Count -= orderDetail.Quantity;
                 }
             }
             await context.SaveChangesAsync();
@@ -264,31 +321,6 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
 
             logger.LogInformation("Finished method CreateOrderAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully created Order by Id:{newOrder.Id}");
-        }
-        catch (Exception e)
-        {
-            logger.LogError("Exception {Exception}, time={DateTimeNow}", e.Message, DateTimeOffset.UtcNow);
-            return new Response<string>(HttpStatusCode.InternalServerError, e.Message);
-        }
-    }
-
-    #endregion
-
-    #region BlockOrdering
-
-    public async Task<Response<string>> BlockOrderControl(UpdateBlockOrderControlDto blockOrderControlDto)
-    {
-        try
-        {
-            logger.LogInformation("Starting method BlockOrderControl in time:{DateTime} ", DateTimeOffset.UtcNow);
-
-            var blockOrderControl = await context.BlockOrderControl.FirstAsync();
-            blockOrderControl.IsBlocked = true;
-            blockOrderControl.UpdatedAt = DateTimeOffset.UtcNow;
-            await context.SaveChangesAsync();
-
-            logger.LogInformation("Finished method BlockOrderControl in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return new Response<string>($"Successfully update BlockOrderControl by Id:{blockOrderControlDto.Id}");
         }
         catch (Exception e)
         {
@@ -345,7 +377,6 @@ ICheckDishIngredientsService checkDishIngredientsService, INotificationService n
     }
 
     #endregion
-
 
 
     #region DeleteOrderAsync

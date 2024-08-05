@@ -54,6 +54,14 @@ public static class Permissions
         public const string Delete = "Permissions.Drink.Delete";
     }
 
+    public static class DrinkIngredient
+    {
+        public const string View = "Permissions.DrinkIngredient.View";
+        public const string Create = "Permissions.DrinkIngredient.Create";
+        public const string Edit = "Permissions.DrinkIngredient.Edit";
+        public const string Delete = "Permissions.DrinkIngredient.Delete";
+    }
+
     public static class Ingredient
     {
         public const string View = "Permissions.Ingredient.View";

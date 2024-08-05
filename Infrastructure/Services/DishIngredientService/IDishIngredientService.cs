@@ -7,8 +7,8 @@ namespace Infrastructure.Services.DishIngredientService;
 public interface IDishIngredientService
 {
     Task<PagedResponse<List<GetDishIngredientDto>>> GetDishIngredientAsync(PaginationFilter filter);
-    Task<Response<GetDishIngredientDto>> GetDishIngredientByIdAsync(DishIngredientDto dishIngredientDto);
-    Task<Response<string>> CreateDishIngredientAsync(DishIngredientDto createCategory);
-    Task<Response<string>> UpdateDishIngredientAsync(UpdateDishIngredientDto updateCategory);
-    Task<Response<bool>> DeleteDishIngredientAsync(DishIngredientDto dishIngredientDto);
+    Task<Response<GetDishIngredientDto>> GetDishIngredientByIdAsync(Guid dishId, Guid ingredientId);
+    Task<Response<string>> CreateDishIngredientAsync(DishIngredientDto createDishIgredient);
+    Task<Response<string>> UpdateDishIngredientAsync(UpdateDishIngredientDto updateDishIgredient);
+    Task<Response<bool>> DeleteDishIngredientAsync(Guid dishId, Guid ingredientId);
 }

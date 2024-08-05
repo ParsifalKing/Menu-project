@@ -30,7 +30,7 @@ public class DrinkController(IDrinkService _drinkService) : ControllerBase
 
     [HttpPost("Create-Drink")]
     [PermissionAuthorize(Permissions.Drink.Create)]
-    public async Task<IActionResult> CreateDrink([FromForm] CreateDrinkDto createDrink)
+    public async Task<IActionResult> CreateDrink([FromBody] CreateDrinkDto createDrink)
     {
         var result = await _drinkService.CreateDrinkAsync(createDrink);
         return StatusCode(result.StatusCode, result);
@@ -38,7 +38,7 @@ public class DrinkController(IDrinkService _drinkService) : ControllerBase
 
     [HttpPut("Update-Drink")]
     [PermissionAuthorize(Permissions.Drink.Edit)]
-    public async Task<IActionResult> UpdateDrink([FromForm] UpdateDrinkDto updateDrink)
+    public async Task<IActionResult> UpdateDrink([FromBody] UpdateDrinkDto updateDrink)
     {
         var result = await _drinkService.UpdateDrinkAsync(updateDrink);
         return StatusCode(result.StatusCode, result);

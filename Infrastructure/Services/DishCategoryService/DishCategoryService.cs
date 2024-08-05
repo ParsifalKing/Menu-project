@@ -6,13 +6,13 @@ using Domain.Entities;
 using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
-using Infrastructure.Services.CheckDishIngredientsService;
+using Infrastructure.Services.CheckIngredientsService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services.DishCategoryService;
 
-public class DishCategoryService(ILogger<DishCategoryService> logger, DataContext context, ICheckDishIngredientsService checkDishIngredientsService) : IDishCategoryService
+public class DishCategoryService(ILogger<DishCategoryService> logger, DataContext context, ICheckIngredientsService checkDishIngredientsService) : IDishCategoryService
 {
     #region GetDishCategoryAsync
 
@@ -41,6 +41,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
                     Price = x.Dish!.Price,
                     AreAllIngredients = x.Dish!.AreAllIngredients,
                     Id = x.Dish!.Id,
+                    Calorie = x.Dish!.Calorie,
                     PathPhoto = x.Dish!.PathPhoto,
                     CreatedAt = x.Dish!.CreatedAt,
                     UpdatedAt = x.Dish!.UpdatedAt,
@@ -93,6 +94,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
                     Price = x.Dish!.Price,
                     AreAllIngredients = x.Dish!.AreAllIngredients,
                     Id = x.Dish!.Id,
+                    Calorie = x.Dish!.Calorie,
                     PathPhoto = x.Dish!.PathPhoto,
                     CreatedAt = x.Dish!.CreatedAt,
                     UpdatedAt = x.Dish!.UpdatedAt,

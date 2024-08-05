@@ -10,4 +10,5 @@ public class Ingredient : BaseEntity
     public string? PathPhoto { get; set; }
 
     public List<DishIngredient>? Dishes { get; set; }
+    public List<DrinkIngredient>? Drinks { get; set; }
 }
