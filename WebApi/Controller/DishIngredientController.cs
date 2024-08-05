@@ -22,9 +22,9 @@ public class DishIngredientController(IDishIngredientService _dishIngredientServ
 
     [HttpGet("Get-DishIngredient-By-Id")]
     [PermissionAuthorize(Permissions.DishIngredient.View)]
-    public async Task<IActionResult> GetDishIngredientById([FromQuery] DishIngredientDto dishIngredientDto)
+    public async Task<IActionResult> GetDishIngredientById(Guid dishId, Guid ingredientId)
     {
-        var response = await _dishIngredientService.GetDishIngredientByIdAsync(dishIngredientDto);
+        var response = await _dishIngredientService.GetDishIngredientByIdAsync(dishId, ingredientId);
         return StatusCode(response.StatusCode, response);
     }
 
@@ -46,9 +46,9 @@ public class DishIngredientController(IDishIngredientService _dishIngredientServ
 
     [HttpDelete("Delete-DishIngredient")]
     [PermissionAuthorize(Permissions.DishIngredient.Delete)]
-    public async Task<IActionResult> DeleteDishIngredient(DishIngredientDto dishIngredientDto)
+    public async Task<IActionResult> DeleteDishIngredient(Guid dishId, Guid ingredientId)
     {
-        var result = await _dishIngredientService.DeleteDishIngredientAsync(dishIngredientDto);
+        var result = await _dishIngredientService.DeleteDishIngredientAsync(dishId, ingredientId);
         return StatusCode(result.StatusCode, result);
     }
 

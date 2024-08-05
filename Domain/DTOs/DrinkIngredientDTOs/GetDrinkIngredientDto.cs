@@ -1,19 +1,18 @@
-using Domain.DTOs.DishDTOs;
+using Domain.DTOs.DrinkDTOs;
 using Domain.DTOs.IngredientDTOs;
-using Domain.Entities;
 
-namespace Domain.DTOs.DishIngredientDTOs;
+namespace Domain.DTOs.DrinkIngredientDTOs;
 
-public class GetDishIngredientDto
+public class GetDrinkIngredientDto
 {
     public Guid Id { get; set; }
-    public Guid DishId { get; set; }
+    public Guid DrinkId { get; set; }
     public Guid IngredientId { get; set; }
     public float Quantity { get; set; }
     public string? Description { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public GetDishDto? Dish { get; set; }
+    public GetDrinkDto? Drink { get; set; }
     public GetIngredientDto? Ingredient { get; set; }
 }

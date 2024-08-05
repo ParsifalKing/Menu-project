@@ -6,14 +6,15 @@ using Domain.Entities;
 using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
-using Infrastructure.Services.CheckDishIngredientsService;
+using Infrastructure.Services.CheckIngredientsService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services.DishIngredientService;
 
-public class DishIngredientService(ILogger<DishIngredientService> logger, DataContext context, ICheckDishIngredientsService checkDishIngredientsService) : IDishIngredientService
+public class DishIngredientService(ILogger<DishIngredientService> logger, DataContext context, ICheckIngredientsService checkDishIngredientsService) : IDishIngredientService
 {
+
     #region GetDishIngredientAsync
 
     public async Task<PagedResponse<List<GetDishIngredientDto>>> GetDishIngredientAsync(PaginationFilter filter)
@@ -24,9 +25,9 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
             var dishIngredient = context.DishIngredient.AsQueryable();
             var checkDishes = await context.Dishes.ToListAsync();
 
-            foreach (var item in checkDishes)
+            foreach (var dish in checkDishes)
             {
-                await checkDishIngredientsService.CheckDishIngredients(item.Id);
+                await checkDishIngredientsService.CheckDishIngredients(dish.Id);
             }
 
             var response = await dishIngredient.Include(x => x.Dish)
@@ -40,6 +41,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
                     CookingTimeInMinutes = x.Dish!.CookingTimeInMinutes,
                     Price = x.Dish!.Price,
                     AreAllIngredients = x.Dish!.AreAllIngredients,
+                    Calorie = x.Dish!.Calorie,
                     Id = x.Dish!.Id,
                     PathPhoto = x.Dish!.PathPhoto,
                     CreatedAt = x.Dish!.CreatedAt,
@@ -81,7 +83,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
 
     #region GetDishIngredientByIdAsync
 
-    public async Task<Response<GetDishIngredientDto>> GetDishIngredientByIdAsync(DishIngredientDto dishIngredientDto)
+    public async Task<Response<GetDishIngredientDto>> GetDishIngredientByIdAsync(Guid dishId, Guid ingredientId)
     {
         try
         {
@@ -99,6 +101,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
                     Price = x.Dish!.Price,
                     AreAllIngredients = x.Dish!.AreAllIngredients,
                     Id = x.Dish!.Id,
+                    Calorie = x.Dish!.Calorie,
                     PathPhoto = x.Dish!.PathPhoto,
                     CreatedAt = x.Dish!.CreatedAt,
                     UpdatedAt = x.Dish!.UpdatedAt,
@@ -122,13 +125,13 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
                 Id = x.Id,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
-            }).FirstOrDefaultAsync(x => x.IngredientId == dishIngredientDto.IngredientId && x.DishId == dishIngredientDto.DishId);
+            }).FirstOrDefaultAsync(x => x.IngredientId == ingredientId && x.DishId == dishId);
 
             if (existing is null)
             {
                 logger.LogWarning("Could not find DishIngredient with IngredientId:{IngredientId} and dishId:{dishId}, time:{DateTimeNow}",
-                dishIngredientDto.IngredientId, dishIngredientDto.DishId, DateTimeOffset.UtcNow);
-                return new Response<GetDishIngredientDto>(HttpStatusCode.BadRequest, $"Not found DishIngredient with IngredientId:{dishIngredientDto.IngredientId} and dishId:{dishIngredientDto.DishId}");
+                ingredientId, dishId, DateTimeOffset.UtcNow);
+                return new Response<GetDishIngredientDto>(HttpStatusCode.BadRequest, $"Not found DishIngredient with IngredientId:{ingredientId} and dishId:{dishId}");
             }
             existing.Dish!.AreAllIngredients = await checkDishIngredientsService.CheckDishIngredients(existing.DishId);
 
@@ -232,17 +235,17 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
 
     #region DeleteDishIngredientAsync
 
-    public async Task<Response<bool>> DeleteDishIngredientAsync(DishIngredientDto dishIngredientDto)
+    public async Task<Response<bool>> DeleteDishIngredientAsync(Guid dishId, Guid ingredientId)
     {
         try
         {
             logger.LogInformation("Starting method DeleteDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var dishIngredient = await context.DishIngredient.Where(x => x.IngredientId == dishIngredientDto.IngredientId && x.DishId == dishIngredientDto.DishId).ExecuteDeleteAsync();
+            var dishIngredient = await context.DishIngredient.Where(x => x.IngredientId == ingredientId && x.DishId == dishId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return dishIngredient == 0
-                ? new Response<bool>(HttpStatusCode.BadRequest, $"DishIngredient not found by IngredientId:{dishIngredientDto.IngredientId} and dishId:{dishIngredientDto.DishId}")
+                ? new Response<bool>(HttpStatusCode.BadRequest, $"DishIngredient not found by IngredientId:{ingredientId} and dishId:{dishId}")
                 : new Response<bool>(true);
         }
         catch (Exception e)

@@ -1,4 +1,5 @@
 using System.Net;
+using Domain.Enums;
 
 namespace Domain.Responses;
 

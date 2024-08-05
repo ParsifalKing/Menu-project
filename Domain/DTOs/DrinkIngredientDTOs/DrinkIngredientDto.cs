@@ -1,8 +1,8 @@
-namespace Domain.DTOs.DishIngredientDTOs;
+namespace Domain.DTOs.DrinkIngredientDTOs;
 
-public class DishIngredientDto
+public class DrinkIngredientDto
 {
-    public required Guid DishId { get; set; }
+    public required Guid DrinkId { get; set; }
     public required Guid IngredientId { get; set; }
     public required float Quantity { get; set; }
     public string? Description { get; set; }

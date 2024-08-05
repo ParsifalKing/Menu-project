@@ -10,7 +10,7 @@ using Infrastructure.Services.DrinkService;
 using Infrastructure.Services.EmailService;
 using Infrastructure.Services.FileService;
 using Infrastructure.Services.HashService;
-using Infrastructure.Services.CheckDishIngredientsService;
+using Infrastructure.Services.CheckIngredientsService;
 using Infrastructure.Services.IngredientService;
 using Infrastructure.Services.RoleService;
 using Infrastructure.Services.UserRoleService;
@@ -21,6 +21,7 @@ using Infrastructure.Services.OrderService;
 using Infrastructure.Services.OrderDetailService;
 using Infrastructure.Services.NotificationService;
 using Infrastructure.Services.TelegramService;
+using Infrastructure.Services.DrinkIngredientService;
 
 namespace WebApi.ExtensionMethods.RegisterService;
 
@@ -33,7 +34,7 @@ public static class RegisterService
 
         services.AddScoped<Seeder>();
         services.AddScoped<IHashService, HashService>();
-        services.AddScoped<ICheckDishIngredientsService, CheckDishIngredientsService>();
+        services.AddScoped<ICheckIngredientsService, CheckIngredientsService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IFileService, FileService>();
         services.AddScoped<INotificationService, NotificationService>();
@@ -46,13 +47,12 @@ public static class RegisterService
         services.AddScoped<IDishCategoryService, DishCategoryService>();
         services.AddScoped<IDishIngredientService, DishIngredientService>();
         services.AddScoped<IDrinkService, DrinkService>();
+        services.AddScoped<IDrinkIngredientService, DrinkIngredientService>();
         services.AddScoped<IIngredientService, IngredientService>();
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IOrderDetailService, OrderDetailService>();
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
-
-
 
     }
 }

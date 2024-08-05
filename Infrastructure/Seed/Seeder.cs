@@ -4,9 +4,7 @@ using Domain.Entities;
 using Infrastructure.Data;
 using Infrastructure.Helpers;
 using Infrastructure.Services.HashService;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 
 namespace Infrastructure.Seed;
@@ -135,7 +133,6 @@ public class Seeder(DataContext context, IHashService hashService)
                     await context.UserRoles.AddAsync(userRole);
                     await context.SaveChangesAsync();
                 }
-
             }
 
 
@@ -270,6 +267,10 @@ public class Seeder(DataContext context, IHashService hashService)
             new("Permissions", Domain.Constants.Permissions.DishIngredient.View),
             new("Permissions", Domain.Constants.Permissions.DishIngredient.Create),
             new("Permissions", Domain.Constants.Permissions.DishIngredient.Edit),
+
+            new("Permissions", Domain.Constants.Permissions.DrinkIngredient.View),
+            new("Permissions", Domain.Constants.Permissions.DrinkIngredient.Create),
+            new("Permissions", Domain.Constants.Permissions.DrinkIngredient.Edit),
 
             new("Permissions", Domain.Constants.Permissions.Drink.View),
             new("Permissions", Domain.Constants.Permissions.Drink.Create),

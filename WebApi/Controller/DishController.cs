@@ -28,17 +28,28 @@ public class DishController(IDishService _dishService) : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+
+    [HttpGet("GetDishesWithDrinks")]
+    [PermissionAuthorize(Permissions.Dish.View)]
+    public async Task<IActionResult> GetDishesWithDrinks()
+    {
+        var response = await _dishService.GetDishesWithDrinks();
+        return StatusCode(response.StatusCode, response);
+    }
+
+
     [HttpPost("Create-Dish")]
     [PermissionAuthorize(Permissions.Dish.Create)]
-    public async Task<IActionResult> CreateDish([FromForm] CreateDishDto createDish)
+    public async Task<IActionResult> CreateDish([FromBody] CreateDishDto createDish)
     {
         var result = await _dishService.CreateDishAsync(createDish);
         return StatusCode(result.StatusCode, result);
     }
 
+
     [HttpPut("Update-Dish")]
     [PermissionAuthorize(Permissions.Dish.Edit)]
-    public async Task<IActionResult> UpdateDish([FromForm] UpdateDishDto updateDish)
+    public async Task<IActionResult> UpdateDish([FromBody] UpdateDishDto updateDish)
     {
         var result = await _dishService.UpdateDishAsync(updateDish);
         return StatusCode(result.StatusCode, result);
