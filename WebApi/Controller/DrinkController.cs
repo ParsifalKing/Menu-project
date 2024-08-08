@@ -4,6 +4,9 @@ using Infrastructure.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Infrastructure.Services.DrinkService;
 using Domain.DTOs.DrinkDTOs;
+using Domain.DTOs.DrinkIngredientDTOs;
+using Newtonsoft.Json;
+using Domain.Entities;
 
 namespace WebApi.Controller;
 
@@ -30,16 +33,51 @@ public class DrinkController(IDrinkService _drinkService) : ControllerBase
 
     [HttpPost("Create-Drink")]
     [PermissionAuthorize(Permissions.Drink.Create)]
-    public async Task<IActionResult> CreateDrink([FromBody] CreateDrinkDto createDrink)
+    public async Task<IActionResult> CreateDrink([FromForm] CreateDrinkForControllerDto createDrinkDto)
     {
+
+        List<DrinkIngredientForCreateDrinkDto>? drinkIngredient = null;
+        if (!string.IsNullOrEmpty(createDrinkDto.DrinkIngredientsJson))
+        {
+            drinkIngredient = JsonConvert.DeserializeObject<List<DrinkIngredientForCreateDrinkDto>>(createDrinkDto.DrinkIngredientsJson);
+        }
+
+        var createDrink = new CreateDrinkDto()
+        {
+            CookingTimeInMinutes = createDrinkDto.CookingTimeInMinutes,
+            Description = createDrinkDto.Description,
+            Name = createDrinkDto.Name,
+            Price = createDrinkDto.Price,
+            Photo = createDrinkDto.Photo,
+            DrinkIngredients = drinkIngredient,
+        };
+
         var result = await _drinkService.CreateDrinkAsync(createDrink);
         return StatusCode(result.StatusCode, result);
     }
 
     [HttpPut("Update-Drink")]
     [PermissionAuthorize(Permissions.Drink.Edit)]
-    public async Task<IActionResult> UpdateDrink([FromBody] UpdateDrinkDto updateDrink)
+    public async Task<IActionResult> UpdateDrink([FromForm] UpdateDrinkForControllerDto updateDrinkDto)
     {
+
+        List<DrinkIngredientDto>? drinkIngredients = null;
+        if (!string.IsNullOrEmpty(updateDrinkDto.DrinkIngredientsJson))
+        {
+            drinkIngredients = JsonConvert.DeserializeObject<List<DrinkIngredientDto>>(updateDrinkDto.DrinkIngredientsJson);
+        }
+
+        var updateDrink = new UpdateDrinkDto()
+        {
+            CookingTimeInMinutes = updateDrinkDto.CookingTimeInMinutes,
+            Description = updateDrinkDto.Description,
+            Id = updateDrinkDto.Id,
+            Name = updateDrinkDto.Name,
+            Price = updateDrinkDto.Price,
+            Photo = updateDrinkDto.Photo,
+            DrinkIngredients = drinkIngredients,
+        };
+
         var result = await _drinkService.UpdateDrinkAsync(updateDrink);
         return StatusCode(result.StatusCode, result);
     }
