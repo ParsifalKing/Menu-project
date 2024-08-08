@@ -1,5 +1,6 @@
 using System.Net;
 using Domain.DTOs.DishDTOs;
+using Domain.DTOs.DishIngredientDTOs;
 using Domain.DTOs.DrinkDTOs;
 using Domain.DTOs.IngredientDTOs;
 using Domain.Entities;
@@ -230,13 +231,6 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
             {
                 foreach (var dishIngredient in createDish.DishIngredients)
                 {
-                    var existing = await context.DishIngredient.AnyAsync(x => x.IngredientId == dishIngredient.IngredientId && x.DishId == dishIngredient.DishId);
-                    if (existing)
-                    {
-                        logger.LogWarning("Ups - error 400, this dish with id - {DishId}, already has this Ingredient with id - {IngredientId}. {Time}",
-                        dishIngredient.DishId, dishIngredient.IngredientId, DateTimeOffset.UtcNow);
-                        return new Response<string>(HttpStatusCode.BadRequest, $"Error 400 , this dish with id - {dishIngredient.DishId}, already has this Ingredient with id - {dishIngredient.IngredientId}");
-                    }
                     if (dishIngredient.Quantity <= 0)
                     {
                         logger.LogWarning("Error 400, quantity of ingredients for dish cannot be negative. Time{DateTime}", DateTime.UtcNow);
@@ -272,8 +266,14 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
             {
                 foreach (var dishIngredient in createDish.DishIngredients)
                 {
-                    dishIngredient.DishId = addedDish.Entity.Id;
-                    var res = await dishIngredientService.CreateDishIngredientAsync(dishIngredient);
+                    var dishIngredientForCreateDish = new DishIngredientDto()
+                    {
+                        DishId = addedDish.Entity.Id,
+                        IngredientId = dishIngredient.IngredientId,
+                        Quantity = dishIngredient.Quantity,
+                        Description = dishIngredient.Description,
+                    };
+                    var res = await dishIngredientService.CreateDishIngredientAsync(dishIngredientForCreateDish);
                     if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of dish (CreateDishIngredient)");
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
                 }

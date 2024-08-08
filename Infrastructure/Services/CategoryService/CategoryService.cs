@@ -1,5 +1,6 @@
 using System.Net;
 using Domain.DTOs.CategoryDTOs;
+using Domain.DTOs.DishDTOs;
 using Domain.Entities;
 using Domain.Filters;
 using Domain.Responses;
@@ -49,37 +50,98 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
 
     #region GetCategoryByIdAsync
 
-    public async Task<Response<GetCategoryDto>> GetCategoryByIdAsync(Guid categoryId)
+    // public async Task<Response<GetCategoryDto>> GetCategoryByIdAsync(Guid categoryId)
+    // {
+    //     try
+    //     {
+    //         logger.LogInformation("Starting method GetCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
+
+    //         var existing = await context.Categories.Select(x => new GetCategoryDto()
+    //         {
+    //             Name = x.Name,
+    //             Description = x.Description,
+    //             CreatedAt = x.CreatedAt,
+    //             UpdatedAt = x.UpdatedAt,
+    //             Id = x.Id,
+    //         }).FirstOrDefaultAsync(x => x.Id == categoryId);
+
+    //         if (existing is null)
+    //         {
+    //             logger.LogWarning("Could not find Category with Id:{Id},time:{DateTimeNow}", categoryId, DateTimeOffset.UtcNow);
+    //             return new Response<GetCategoryDto>(HttpStatusCode.BadRequest, $"Not found Category by id:{categoryId}");
+    //         }
+
+
+    //         logger.LogInformation("Finished method GetCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
+    //         return new Response<GetCategoryDto>(existing);
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         logger.LogError("Exception {Exception}, time={DateTimeNow}", e.Message, DateTimeOffset.UtcNow);
+    //         return new Response<GetCategoryDto>(HttpStatusCode.InternalServerError, e.Message);
+    //     }
+    // }
+
+    public async Task<Response<GetCategoryWithAllDishes>> GetCategoryByIdAsync(Guid categoryId)
     {
         try
         {
-            logger.LogInformation("Starting method GetCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
+            logger.LogInformation("Starting method GetCategoryByIdAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var existing = await context.Categories.Select(x => new GetCategoryDto()
-            {
-                Name = x.Name,
-                Description = x.Description,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt,
-                Id = x.Id,
-            }).FirstOrDefaultAsync(x => x.Id == categoryId);
+            var categoryDishes = await (from c in context.Categories
+                                        where c.Id == categoryId
+                                        join dc in context.DishCategory on c.Id equals dc.CategoryId into CategoryIngGroup
+                                        from dc in CategoryIngGroup.DefaultIfEmpty()
+                                        join d in context.Dishes on dc.DishId equals d.Id into ingGroup
+                                        from d in ingGroup.DefaultIfEmpty()
+                                        select new
+                                        {
+                                            Category = new GetCategoryDto()
+                                            {
+                                                Name = c.Name,
+                                                Description = c.Description,
+                                                CreatedAt = c.CreatedAt,
+                                                UpdatedAt = c.UpdatedAt,
+                                                Id = c.Id,
+                                            },
+                                            CategoryIngredients = d != null ? new GetDishDto()
+                                            {
+                                                Description = d.Description,
+                                                Name = d.Name,
+                                                Calorie = d.Calorie,
+                                                AreAllIngredients = d.AreAllIngredients,
+                                                CookingTimeInMinutes = d.CookingTimeInMinutes,
+                                                Price = d.Price,
+                                                PathPhoto = d.PathPhoto,
+                                                CreatedAt = d.CreatedAt,
+                                                UpdatedAt = d.UpdatedAt,
+                                                Id = d.Id,
+                                            } : null,
+                                        }).ToListAsync();
 
-            if (existing is null)
+            if (categoryDishes is null || !categoryDishes.Any())
             {
                 logger.LogWarning("Could not find Category with Id:{Id},time:{DateTimeNow}", categoryId, DateTimeOffset.UtcNow);
-                return new Response<GetCategoryDto>(HttpStatusCode.BadRequest, $"Not found Category by id:{categoryId}");
+                return new Response<GetCategoryWithAllDishes>(HttpStatusCode.BadRequest, $"Not found Category by id:{categoryId}");
             }
 
+            var categoryWithDishes = new GetCategoryWithAllDishes()
+            {
+                Category = categoryDishes.First().Category,
+                CategoryDishes = categoryDishes.Where(x => x.CategoryIngredients != null)
+                                                 .Select(x => x.CategoryIngredients).ToList(),
+            };
 
-            logger.LogInformation("Finished method GetCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return new Response<GetCategoryDto>(existing);
+            logger.LogInformation("Finished method GetCategoryByIdAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
+            return new Response<GetCategoryWithAllDishes>(categoryWithDishes);
         }
         catch (Exception e)
         {
             logger.LogError("Exception {Exception}, time={DateTimeNow}", e.Message, DateTimeOffset.UtcNow);
-            return new Response<GetCategoryDto>(HttpStatusCode.InternalServerError, e.Message);
+            return new Response<GetCategoryWithAllDishes>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
+
 
     #endregion
 

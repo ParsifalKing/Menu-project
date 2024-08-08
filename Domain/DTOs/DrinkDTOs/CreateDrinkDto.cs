@@ -11,5 +11,5 @@ public class CreateDrinkDto
     public required int CookingTimeInMinutes { get; set; }
     public IFormFile? Photo { get; set; }
 
-    public List<DrinkIngredientDto>? DrinkIngredients { get; set; }
+    public List<DrinkIngredientForCreateDrinkDto>? DrinkIngredients { get; set; }
 }
