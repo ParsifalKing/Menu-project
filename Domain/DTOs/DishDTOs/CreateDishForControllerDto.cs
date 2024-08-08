@@ -1,9 +1,8 @@
-using Domain.DTOs.DishIngredientDTOs;
 using Microsoft.AspNetCore.Http;
 
 namespace Domain.DTOs.DishDTOs;
 
-public class CreateDishDto
+public class CreateDishForControllerDto
 {
     public required string Name { get; set; }
     public required string Description { get; set; }
@@ -12,5 +11,5 @@ public class CreateDishDto
     public required float Calorie { get; set; }
     public IFormFile? Photo { get; set; }
 
-    public List<DishIngredientForCreateDishDto>? DishIngredients { get; set; }
+    public string? DishIngredientsJson { get; set; }
 }

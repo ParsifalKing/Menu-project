@@ -1,5 +1,6 @@
 using System.Net;
 using Domain.DTOs.DrinkDTOs;
+using Domain.DTOs.DrinkIngredientDTOs;
 using Domain.DTOs.IngredientDTOs;
 using Domain.Entities;
 using Domain.Filters;
@@ -164,13 +165,6 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
             {
                 foreach (var DrinkIngredient in createDrink.DrinkIngredients)
                 {
-                    var existing = await context.DrinkIngredient.AnyAsync(x => x.IngredientId == DrinkIngredient.IngredientId && x.DrinkId == DrinkIngredient.DrinkId);
-                    if (existing)
-                    {
-                        logger.LogWarning("Ups - error 400, this Drink with id - {DrinkId}, already has this Ingredient with id - {IngredientId}. {Time}",
-                        DrinkIngredient.DrinkId, DrinkIngredient.IngredientId, DateTimeOffset.UtcNow);
-                        return new Response<string>(HttpStatusCode.BadRequest, $"Error 400 , this Drink with id - {DrinkIngredient.DrinkId}, already has this Ingredient with id - {DrinkIngredient.IngredientId}");
-                    }
                     if (DrinkIngredient.Quantity <= 0)
                     {
                         logger.LogWarning("Error 400, quantity of ingredients for Drink cannot be negative. Time{DateTime}", DateTime.UtcNow);
@@ -203,10 +197,16 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
             // Creating DrinkIngredient
             if (createDrink.DrinkIngredients != null)
             {
-                foreach (var DrinkIngredient in createDrink.DrinkIngredients)
+                foreach (var drinkIngredient in createDrink.DrinkIngredients)
                 {
-                    DrinkIngredient.DrinkId = addedDrink.Entity.Id;
-                    var res = await DrinkIngredientService.CreateDrinkIngredientAsync(DrinkIngredient);
+                    var drinkIngredientForCreateDrink = new DrinkIngredientDto()
+                    {
+                        DrinkId = addedDrink.Entity.Id,
+                        IngredientId = drinkIngredient.IngredientId,
+                        Quantity = drinkIngredient.Quantity,
+                        Description = drinkIngredient.Description,
+                    };
+                    var res = await DrinkIngredientService.CreateDrinkIngredientAsync(drinkIngredientForCreateDrink);
                     if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of Drink (CreateDrinkIngredient)");
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of Drink (CreateDrinkIngredient)");
                 }
