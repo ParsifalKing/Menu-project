@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20240810142300_v-7")]
+    partial class v7
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,13 +55,11 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PathPhoto")
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -601,13 +602,11 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.Dish", "Dish")
                         .WithMany("OrderDetails")
-                        .HasForeignKey("DishId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("DishId");
 
                     b.HasOne("Domain.Entities.Drink", "Drink")
                         .WithMany("OrderDetails")
-                        .HasForeignKey("DrinkId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("DrinkId");
 
                     b.HasOne("Domain.Entities.Order", "Order")
                         .WithMany("OrderDetails")

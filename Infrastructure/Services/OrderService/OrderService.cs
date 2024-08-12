@@ -262,6 +262,13 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                                               Ingredients = i,
                                               DishIngredient = di,
                                           }).AsQueryable();
+
+                    if (dishIngredient == null || !dishIngredient.Any())
+                    {
+                        logger.LogWarning("Error 400, Dish has not any ingredients");
+                        return new Response<string>(HttpStatusCode.BadRequest, "Ingredients of dish not found");
+                    }
+
                     if (dishIngredient != null)
                     {
                         Guid dishId = Guid.Empty;
@@ -290,7 +297,9 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                                                Ingredients = i,
                                                DrinkIngredient = di,
                                            }).AsQueryable();
-                    if (drinkIngredient != null)
+
+
+                    if (drinkIngredient != null && drinkIngredient.Any())
                     {
                         Guid drinkId = Guid.Empty;
                         foreach (var item in drinkIngredient)

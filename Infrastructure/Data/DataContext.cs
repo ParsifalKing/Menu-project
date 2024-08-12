@@ -9,8 +9,8 @@ public class DataContext : DbContext
 
 
     public DbSet<Category> Categories { get; set; }
-    public DbSet<Dish> Dishes { get; set; }
     public DbSet<DishCategory> DishCategory { get; set; }
+    public DbSet<Dish> Dishes { get; set; }
     public DbSet<DishIngredient> DishIngredient { get; set; }
     public DbSet<Drink> Drinks { get; set; }
     public DbSet<DrinkIngredient> DrinkIngredient { get; set; }
@@ -57,6 +57,60 @@ public class DataContext : DbContext
             .HasOne(u => u.User)
             .WithMany(n => n.Notifications)
             .HasForeignKey(u => u.UserId);
+
+        // DishCategory - linking Dish and Category
+        modelBuilder.Entity<DishCategory>()
+            .HasOne(dc => dc.Dish)
+            .WithMany(d => d.Categories)
+            .HasForeignKey(dc => dc.DishId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DishCategory>()
+            .HasOne(dc => dc.Category)
+            .WithMany(c => c.Dishes)
+            .HasForeignKey(dc => dc.CategoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // DishIngredient - linking Dish and Ingredient
+        modelBuilder.Entity<DishIngredient>()
+            .HasOne(di => di.Dish)
+            .WithMany(d => d.Ingredients)
+            .HasForeignKey(di => di.DishId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DishIngredient>()
+            .HasOne(di => di.Ingredient)
+            .WithMany(i => i.Dishes)
+            .HasForeignKey(di => di.IngredientId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // DrinkIngredient - linking Drink and Ingredient
+        modelBuilder.Entity<DrinkIngredient>()
+            .HasOne(di => di.Drink)
+            .WithMany(d => d.Ingredients)
+            .HasForeignKey(di => di.DrinkId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<DrinkIngredient>()
+            .HasOne(di => di.Ingredient)
+            .WithMany(i => i.Drinks)
+            .HasForeignKey(di => di.IngredientId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // OrderDetail - linking to Drink
+        modelBuilder.Entity<OrderDetail>()
+            .HasOne(od => od.Drink)
+            .WithMany(d => d.OrderDetails)
+            .HasForeignKey(od => od.DrinkId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // OrderDetail - linking to Dish
+        modelBuilder.Entity<OrderDetail>()
+            .HasOne(od => od.Dish)
+            .WithMany(d => d.OrderDetails)
+            .HasForeignKey(od => od.DishId)
+            .OnDelete(DeleteBehavior.Cascade);
+
 
         base.OnModelCreating(modelBuilder);
     }
