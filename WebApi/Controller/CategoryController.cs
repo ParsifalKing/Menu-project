@@ -43,8 +43,8 @@ public class CategoryController(ICategoryService _categoryService) : ControllerB
         var createCategory = new CreateCategoryDto()
         {
             Description = createCategoryDto.Description,
-            Photo = createCategoryDto.Photo,
             Name = createCategoryDto.Name,
+            Photo = createCategoryDto.Photo,
             CategoryDishes = categoryDishes,
         };
 

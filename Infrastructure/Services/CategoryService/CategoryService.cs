@@ -32,6 +32,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
             {
                 Name = x.Name,
                 Description = x.Description,
+                PathPhoto = x.PathPhoto,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
                 Id = x.Id,
@@ -71,6 +72,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                                             {
                                                 Name = c.Name,
                                                 Description = c.Description,
+                                                PathPhoto = c.PathPhoto,
                                                 CreatedAt = c.CreatedAt,
                                                 UpdatedAt = c.UpdatedAt,
                                                 Id = c.Id,
