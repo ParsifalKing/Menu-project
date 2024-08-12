@@ -1,16 +1,19 @@
 using System.Net;
 using Domain.DTOs.CategoryDTOs;
+using Domain.DTOs.DishCategoryDTOs;
 using Domain.DTOs.DishDTOs;
 using Domain.Entities;
 using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
+using Infrastructure.Services.DishCategoryService;
+using Infrastructure.Services.FileService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services.CategoryService;
 
-public class CategoryService(ILogger<CategoryService> logger, DataContext context) : ICategoryService
+public class CategoryService(ILogger<CategoryService> logger, DataContext context, IFileService fileService, IDishCategoryService dishCategoryService) : ICategoryService
 {
 
     #region GetCategoriesAsync
@@ -49,38 +52,6 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
     #endregion
 
     #region GetCategoryByIdAsync
-
-    // public async Task<Response<GetCategoryDto>> GetCategoryByIdAsync(Guid categoryId)
-    // {
-    //     try
-    //     {
-    //         logger.LogInformation("Starting method GetCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-
-    //         var existing = await context.Categories.Select(x => new GetCategoryDto()
-    //         {
-    //             Name = x.Name,
-    //             Description = x.Description,
-    //             CreatedAt = x.CreatedAt,
-    //             UpdatedAt = x.UpdatedAt,
-    //             Id = x.Id,
-    //         }).FirstOrDefaultAsync(x => x.Id == categoryId);
-
-    //         if (existing is null)
-    //         {
-    //             logger.LogWarning("Could not find Category with Id:{Id},time:{DateTimeNow}", categoryId, DateTimeOffset.UtcNow);
-    //             return new Response<GetCategoryDto>(HttpStatusCode.BadRequest, $"Not found Category by id:{categoryId}");
-    //         }
-
-
-    //         logger.LogInformation("Finished method GetCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-    //         return new Response<GetCategoryDto>(existing);
-    //     }
-    //     catch (Exception e)
-    //     {
-    //         logger.LogError("Exception {Exception}, time={DateTimeNow}", e.Message, DateTimeOffset.UtcNow);
-    //         return new Response<GetCategoryDto>(HttpStatusCode.InternalServerError, e.Message);
-    //     }
-    // }
 
     public async Task<Response<GetCategoryWithAllDishes>> GetCategoryByIdAsync(Guid categoryId)
     {
@@ -152,6 +123,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
         try
         {
             logger.LogInformation("Starting method CreateCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
+
             var existing = await context.Categories.AnyAsync(x => x.Name == createCategory.Name);
             if (existing == true) return new Response<string>(HttpStatusCode.BadRequest, $"This category by name:{createCategory.Name} already exist");
 
@@ -162,9 +134,29 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
             };
+            if (createCategory.Photo != null)
+                newCategory.PathPhoto = await fileService.CreateFile(createCategory.Photo);
 
-            await context.Categories.AddAsync(newCategory);
+            var addedCategory = await context.Categories.AddAsync(newCategory);
             await context.SaveChangesAsync();
+
+            // Creating CategoryDishes
+            if (createCategory.CategoryDishes != null)
+            {
+                foreach (var categoryDishes in createCategory.CategoryDishes)
+                {
+                    var categoryDishesForDishCategory = new DishCategoryDto()
+                    {
+                        CategoryId = addedCategory.Entity.Id,
+                        DishId = categoryDishes.DishId,
+                    };
+                    var res = await dishCategoryService.CreateDishCategoryAsync(categoryDishesForDishCategory);
+                    if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of dish (CreateDishIngredient)");
+                    if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
+                }
+            }
+            await context.SaveChangesAsync();
+
 
             logger.LogInformation("Finished method CreateCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully created Category by Id:{newCategory.Id}");
@@ -177,6 +169,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
     }
 
     #endregion
+
 
     #region UpdateCategoryAsync
 
@@ -193,10 +186,32 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                 new Response<string>(HttpStatusCode.BadRequest, $"Not found Booking by id:{updateCategory.Id}");
             }
 
+            var foundCategoryDishes = await context.DishCategory.Where(x => x.CategoryId == updateCategory.Id).ToListAsync();
+            if (foundCategoryDishes != null) context.DishCategory.RemoveRange(foundCategoryDishes);
+
             existing!.Name = updateCategory.Name;
             existing.Description = updateCategory.Description;
             existing.UpdatedAt = DateTimeOffset.UtcNow;
+            if (updateCategory.Photo != null)
+            {
+                if (existing.PathPhoto != null) fileService.DeleteFile(existing.PathPhoto);
+                existing.PathPhoto = await fileService.CreateFile(updateCategory.Photo);
+            }
             await context.SaveChangesAsync();
+
+            // Creating CategoryDishes
+            if (updateCategory.CategoryDishes != null)
+            {
+                foreach (var dishIngredient in updateCategory.CategoryDishes)
+                {
+                    dishIngredient.CategoryId = existing.Id;
+                    var res = await dishCategoryService.CreateDishCategoryAsync(dishIngredient);
+                    if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of dish (CreateDishIngredient)");
+                    if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
+                }
+            }
+            await context.SaveChangesAsync();
+
 
             logger.LogInformation("Finished method UpdateCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully updated Category by id:{updateCategory.Id}");
@@ -209,6 +224,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
     }
 
     #endregion
+
 
     #region DeleteCategoryAsync
 

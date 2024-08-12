@@ -81,6 +81,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
 
     #endregion
 
+
     #region GetDishesAsync
 
     public async Task<PagedResponse<List<GetDishDto>>> GetDishesAsync(DishFilter filter)
@@ -278,6 +279,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
                 }
             }
+            await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method CreateDishAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully created Dish by Id:{newDish.Id}");
@@ -290,6 +292,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
     }
 
     #endregion
+
 
     #region UpdateDishAsync
 
@@ -359,6 +362,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
                 }
             }
+            await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method UpdateDishAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully updated Dish by id:{updateDish.Id}");
@@ -371,6 +375,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
     }
 
     #endregion
+
 
     #region DeleteDishAsync
 

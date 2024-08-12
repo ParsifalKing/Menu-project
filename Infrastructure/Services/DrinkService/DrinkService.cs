@@ -211,6 +211,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of Drink (CreateDrinkIngredient)");
                 }
             }
+            await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method CreateDrinkAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully created Drink by Id:{newDrink.Id}");
@@ -293,6 +294,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of Drink (CreateDrinkIngredient)");
                 }
             }
+            await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method UpdateDrinkAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully updated Drink by id:{updateDrink.Id}");
