@@ -6,6 +6,7 @@ using Infrastructure.Services.DishService;
 using Domain.DTOs.DishDTOs;
 using Domain.DTOs.DishIngredientDTOs;
 using Newtonsoft.Json;
+using Domain.DTOs.DishCategoryDTOs;
 
 namespace WebApi.Controller;
 
@@ -50,6 +51,12 @@ public class DishController(IDishService _dishService) : ControllerBase
             dishIngredients = JsonConvert.DeserializeObject<List<DishIngredientForCreateDishDto>>(createDishDto.DishIngredientsJson);
         }
 
+        List<DishCategoryForCreateDishDto>? dishCategories = null;
+        if (!string.IsNullOrEmpty(createDishDto.DishCategoriesJson))
+        {
+            dishCategories = JsonConvert.DeserializeObject<List<DishCategoryForCreateDishDto>>(createDishDto.DishCategoriesJson);
+        }
+
         var createDish = new CreateDishDto()
         {
             Name = createDishDto.Name,
@@ -59,6 +66,7 @@ public class DishController(IDishService _dishService) : ControllerBase
             Price = createDishDto.Price,
             Photo = createDishDto.Photo,
             DishIngredients = dishIngredients,
+            DishCategories = dishCategories,
         };
 
         var result = await _dishService.CreateDishAsync(createDish);
@@ -77,6 +85,12 @@ public class DishController(IDishService _dishService) : ControllerBase
             dishIngredients = JsonConvert.DeserializeObject<List<DishIngredientDto>>(updateDishDto.DishIngredientsJson);
         }
 
+        List<DishCategoryDto>? dishCategories = null;
+        if (!string.IsNullOrEmpty(updateDishDto.DishCategoriesJson))
+        {
+            dishCategories = JsonConvert.DeserializeObject<List<DishCategoryDto>>(updateDishDto.DishCategoriesJson);
+        }
+
         var updateDish = new UpdateDishDto()
         {
             Id = updateDishDto.Id,
@@ -87,6 +101,7 @@ public class DishController(IDishService _dishService) : ControllerBase
             Price = updateDishDto.Price,
             Photo = updateDishDto.Photo,
             DishIngredients = dishIngredients,
+            DishCategories = dishCategories,
         };
 
         var result = await _dishService.UpdateDishAsync(updateDish);

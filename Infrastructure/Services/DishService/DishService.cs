@@ -1,4 +1,5 @@
 using System.Net;
+using Domain.DTOs.DishCategoryDTOs;
 using Domain.DTOs.DishDTOs;
 using Domain.DTOs.DishIngredientDTOs;
 using Domain.DTOs.DrinkDTOs;
@@ -8,6 +9,7 @@ using Domain.Filters;
 using Domain.Responses;
 using Infrastructure.Data;
 using Infrastructure.Services.CheckIngredientsService;
+using Infrastructure.Services.DishCategoryService;
 using Infrastructure.Services.DishIngredientService;
 using Infrastructure.Services.FileService;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +19,8 @@ using Org.BouncyCastle.Math.EC.Rfc7748;
 namespace Infrastructure.Services.DishService;
 
 public class DishService(ILogger<DishService> logger, IFileService fileService, DataContext context,
- ICheckIngredientsService checkDishIngredientsService, IDishIngredientService dishIngredientService) : IDishService
+ ICheckIngredientsService checkDishIngredientsService, IDishIngredientService dishIngredientService,
+  IDishCategoryService dishCategoryService) : IDishService
 {
 
     #region GetDishesWithDrinks
@@ -279,6 +282,24 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
                 }
             }
+
+
+            // Creating DishCategory
+            if (createDish.DishCategories != null)
+            {
+                foreach (var dishCategory in createDish.DishCategories)
+                {
+                    var dishCategoryForCreateDish = new DishCategoryDto()
+                    {
+                        DishId = addedDish.Entity.Id,
+                        CategoryId = dishCategory.CategoryId,
+                    };
+                    var res = await dishCategoryService.CreateDishCategoryAsync(dishCategoryForCreateDish);
+                    if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of dish (CreateDishIngredient)");
+                    if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
+                }
+            }
+
             await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method CreateDishAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
@@ -356,12 +377,26 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
             {
                 foreach (var dishIngredient in updateDish.DishIngredients)
                 {
-                    dishIngredient.DishId = existing.Id;
+                    dishIngredient.DishId = updateDish.Id;
                     var res = await dishIngredientService.CreateDishIngredientAsync(dishIngredient);
                     if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of dish (CreateDishIngredient)");
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
                 }
             }
+
+
+            // Creating DishCategory
+            if (updateDish.DishCategories != null)
+            {
+                foreach (var dishCategory in updateDish.DishCategories)
+                {
+                    dishCategory.DishId = updateDish.Id;
+                    var res = await dishCategoryService.CreateDishCategoryAsync(dishCategory);
+                    if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of dish (CreateDishIngredient)");
+                    if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of dish (CreateDishIngredient)");
+                }
+            }
+
             await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method UpdateDishAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
