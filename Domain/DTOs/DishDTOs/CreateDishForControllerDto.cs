@@ -12,4 +12,6 @@ public class CreateDishForControllerDto
     public IFormFile? Photo { get; set; }
 
     public string? DishIngredientsJson { get; set; }
+    public string? DishCategoriesJson { get; set; }
+
 }

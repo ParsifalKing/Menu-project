@@ -170,7 +170,7 @@ public class AccountService(DataContext context, ILogger<AccountService> logger,
             issuer: configuration["JWT:Issuer"],
             audience: configuration["JWT:Audience"],
             claims: claims,
-            expires: DateTime.UtcNow.AddHours(1),
+            expires: DateTime.UtcNow.AddHours(12),
             signingCredentials: credentials
         );
 

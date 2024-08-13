@@ -1,3 +1,4 @@
+using Domain.DTOs.DishCategoryDTOs;
 using Domain.DTOs.DishIngredientDTOs;
 using Microsoft.AspNetCore.Http;
 
@@ -13,4 +14,5 @@ public class CreateDishDto
     public IFormFile? Photo { get; set; }
 
     public List<DishIngredientForCreateDishDto>? DishIngredients { get; set; }
+    public List<DishCategoryForCreateDishDto>? DishCategories { get; set; }
 }

@@ -13,4 +13,5 @@ public class UpdateDishForControllerDto
     public IFormFile? Photo { get; set; }
 
     public string? DishIngredientsJson { get; set; }
+    public string? DishCategoriesJson { get; set; }
 }
