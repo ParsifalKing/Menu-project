@@ -34,7 +34,7 @@ public class AccountController(IAccountService authService) : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpDelete("forgot-password")]
+    [HttpPut("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {
         var result = await authService.ForgotPasswordCodeGenerator(forgotPasswordDto);
@@ -42,7 +42,7 @@ public class AccountController(IAccountService authService) : ControllerBase
     }
 
 
-    [HttpDelete("reset-password")]
+    [HttpPut("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
     {
         var result = await authService.ResetPassword(resetPasswordDto);
