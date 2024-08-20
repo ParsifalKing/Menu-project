@@ -196,7 +196,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
                                              } : null,
                                          }).ToListAsync();
 
-            if (dishIngredients is null || !dishIngredients.Any())
+            if (!dishIngredients.Any())
             {
                 logger.LogWarning("Could not find Dish with Id:{Id},time:{DateTimeNow}", dishId, DateTimeOffset.UtcNow);
                 return new Response<GetDishWithAllIngredients>(HttpStatusCode.BadRequest, $"Not found Dish by id:{dishId}");

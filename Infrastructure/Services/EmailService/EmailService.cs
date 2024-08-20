@@ -29,7 +29,7 @@ public class EmailService(EmailConfiguration configuration, ILogger<EmailService
         logger.LogInformation("Starting method CreateEmailMessage in time {DateTime}", DateTimeOffset.UtcNow);
 
         var emailMessage = new MimeMessage();
-        emailMessage.From.Add(new MailboxAddress("mail", configuration.From));
+        emailMessage.From.Add(new MailboxAddress("Ymmu", configuration.From));
         emailMessage.To.AddRange(message.To);
         emailMessage.Subject = message.Subject;
         emailMessage.Body = new TextPart(format) { Text = message.Content };

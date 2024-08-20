@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20240729172340_v-2")]
-    partial class v2
+    [Migration("20240817171622_v-1")]
+    partial class v1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,6 +25,28 @@ namespace Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Entities.BlockOrderControl", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsBlocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BlockOrderControl");
+                });
+
             modelBuilder.Entity("Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -35,11 +57,13 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PathPhoto")
                         .HasColumnType("text");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
@@ -58,6 +82,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<bool>("AreAllIngredients")
                         .HasColumnType("boolean");
+
+                    b.Property<float>("Calorie")
+                        .HasColumnType("real");
 
                     b.Property<int>("CookingTimeInMinutes")
                         .HasColumnType("integer");
@@ -124,7 +151,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<Guid>("DishId")
@@ -133,8 +159,8 @@ namespace Infrastructure.Migrations
                     b.Property<Guid>("IngredientId")
                         .HasColumnType("uuid");
 
-                    b.Property<double>("Quantity")
-                        .HasColumnType("double precision");
+                    b.Property<float>("Quantity")
+                        .HasColumnType("real");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -154,7 +180,10 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("Count")
+                    b.Property<bool>("AreAllIngredients")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("CookingTimeInMinutes")
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset>("CreatedAt")
@@ -180,6 +209,39 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Drinks");
+                });
+
+            modelBuilder.Entity("Domain.Entities.DrinkIngredient", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("DrinkId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("IngredientId")
+                        .HasColumnType("uuid");
+
+                    b.Property<float>("Quantity")
+                        .HasColumnType("real");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DrinkId");
+
+                    b.HasIndex("IngredientId");
+
+                    b.ToTable("DrinkIngredient");
                 });
 
             modelBuilder.Entity("Domain.Entities.Ingredient", b =>
@@ -242,12 +304,10 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Id")
+                    b.HasIndex("OrderId")
                         .IsUnique();
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("OrderId");
 
                     b.ToTable("Notifications");
                 });
@@ -493,6 +553,25 @@ namespace Infrastructure.Migrations
                     b.Navigation("Ingredient");
                 });
 
+            modelBuilder.Entity("Domain.Entities.DrinkIngredient", b =>
+                {
+                    b.HasOne("Domain.Entities.Drink", "Drink")
+                        .WithMany("Ingredients")
+                        .HasForeignKey("DrinkId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Domain.Entities.Ingredient", "Ingredient")
+                        .WithMany("Drinks")
+                        .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Drink");
+
+                    b.Navigation("Ingredient");
+                });
+
             modelBuilder.Entity("Domain.Entities.Notification", b =>
                 {
                     b.HasOne("Domain.Entities.Order", "Order")
@@ -527,11 +606,13 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.Dish", "Dish")
                         .WithMany("OrderDetails")
-                        .HasForeignKey("DishId");
+                        .HasForeignKey("DishId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Domain.Entities.Drink", "Drink")
                         .WithMany("OrderDetails")
-                        .HasForeignKey("DrinkId");
+                        .HasForeignKey("DrinkId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("Domain.Entities.Order", "Order")
                         .WithMany("OrderDetails")
@@ -592,12 +673,16 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.Drink", b =>
                 {
+                    b.Navigation("Ingredients");
+
                     b.Navigation("OrderDetails");
                 });
 
             modelBuilder.Entity("Domain.Entities.Ingredient", b =>
                 {
                     b.Navigation("Dishes");
+
+                    b.Navigation("Drinks");
                 });
 
             modelBuilder.Entity("Domain.Entities.Order", b =>

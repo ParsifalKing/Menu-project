@@ -1,6 +1,7 @@
 using System.Net;
 using Domain.DTOs.BlockOrderControlDTOs;
 using Domain.DTOs.NotificationDTOs;
+using Domain.DTOs.OrderDetailDTOs;
 using Domain.DTOs.OrderDTOs;
 using Domain.Entities;
 using Domain.Filters;
@@ -68,38 +69,64 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
 
     #region GetOrderByIdAsync
 
-    public async Task<Response<GetOrderDto>> GetOrderByIdAsync(Guid orderId)
+    public async Task<Response<GetOrderWithOrderDetail>> GetOrderByIdAsync(Guid orderId)
     {
         try
         {
-            logger.LogInformation("Starting method GetOrderByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
+            logger.LogInformation("Starting method GetOrderByIdAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var existing = await context.Orders.Select(x => new GetOrderDto()
-            {
-                OrderInfo = x.OrderInfo,
-                OrderStatus = x.OrderStatus,
-                UserId = x.UserId,
-                TotalAmount = x.TotalAmount,
-                OrderTimeInMinutes = x.OrderTimeInMinutes,
-                DateOfPreparingOrder = x.DateOfPreparingOrder,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt,
-                Id = x.Id,
-            }).FirstOrDefaultAsync(x => x.Id == orderId);
+            var orderAndOrderDetails = await (from o in context.Orders
+                                          where o.Id == orderId
+                                          join od in context.OrderDetails on o.Id equals od.OrderId into OrderIngGroup
+                                          from od in OrderIngGroup.DefaultIfEmpty()
+                                          select new
+                                          {
+                                              Order = new GetOrderDto()
+                                              { 
+                                                  OrderInfo = o.OrderInfo,
+                                                  TotalAmount = o.TotalAmount,
+                                                  OrderTimeInMinutes = o.OrderTimeInMinutes,
+                                                  UserId = o.UserId,
+                                                  DateOfPreparingOrder = o.DateOfPreparingOrder,
+                                                  OrderStatus = o.OrderStatus,
+                                                  CreatedAt = o.CreatedAt,
+                                                  UpdatedAt = o.UpdatedAt,
+                                                  Id = o.Id,
+                                              },
+                                              OrderDetail = od != null ? new GetOrderDetailDto()
+                                              {
+                                                  
+                                                  OrderId = od.OrderId,
+                                                  DrinkId = od.DrinkId,
+                                                  DishId = od.DishId,
+                                                  Quantity = od.Quantity,
+                                                  UnitPrice = od.UnitPrice,
+                                                  CreatedAt = od.CreatedAt,
+                                                  UpdatedAt = od.UpdatedAt,
+                                                  Id = od.Id,
+                                              } : null,
+                                          }).ToListAsync();
 
-            if (existing is null)
+            if (!orderAndOrderDetails.Any())
             {
                 logger.LogWarning("Could not find Order with Id:{Id},time:{DateTimeNow}", orderId, DateTimeOffset.UtcNow);
-                return new Response<GetOrderDto>(HttpStatusCode.BadRequest, $"Not found Order by id:{orderId}");
+                return new Response<GetOrderWithOrderDetail>(HttpStatusCode.BadRequest, $"Not found Drink by id:{orderId}");
             }
 
-            logger.LogInformation("Finished method GetOrderByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return new Response<GetOrderDto>(existing);
+            var orderWithOrderDetail = new GetOrderWithOrderDetail()
+            {
+                Order = orderAndOrderDetails.First().Order,
+                OrderDetails = orderAndOrderDetails.Where(x => x.OrderDetail != null)
+                                                   .Select(x => x.OrderDetail).ToList(),
+            };
+            
+            logger.LogInformation("Finished method GetDrinkByIdAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
+            return new Response<GetOrderWithOrderDetail>(orderWithOrderDetail);
         }
         catch (Exception e)
         {
             logger.LogError("Exception {Exception}, time={DateTimeNow}", e.Message, DateTimeOffset.UtcNow);
-            return new Response<GetOrderDto>(HttpStatusCode.InternalServerError, e.Message);
+            return new Response<GetOrderWithOrderDetail>(HttpStatusCode.InternalServerError, e.Message);
         }
     }
 
@@ -114,7 +141,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
         {
             logger.LogInformation("Starting method GetBlockOrderControl in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var blockOrderControl = await context.BlockOrderControl.FirstAsync();
+            var blockOrderControl = await context.BlockOrderControl.FirstAsync(x => x.Id == 1);
 
             var blockOrderControlDto = new GetBlockOrderControlDto()
             {
@@ -146,8 +173,8 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
         {
             logger.LogInformation("Starting method BlockOrderControl in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var blockOrderControl = await context.BlockOrderControl.FirstAsync();
-            blockOrderControl.IsBlocked = true;
+            var blockOrderControl = await context.BlockOrderControl.FirstAsync(x => x.Id == 1);
+            blockOrderControl.IsBlocked = blockOrderControlDto.IsBlocked;
             blockOrderControl.UpdatedAt = DateTimeOffset.UtcNow;
             await context.SaveChangesAsync();
 
@@ -171,7 +198,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
         try
         {
             logger.LogInformation("Starting method CreateOrderAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            var checkedBlockOrdering = await context.BlockOrderControl.FirstAsync();
+            var checkedBlockOrdering = await context.BlockOrderControl.FirstAsync(x => x.Id == 1);
             if (checkedBlockOrdering.IsBlocked == true)
             {
                 logger.LogWarning("ordering is blocked now, in time:{DateTime}", DateTime.UtcNow);
@@ -263,7 +290,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                                               DishIngredient = di,
                                           }).AsQueryable();
 
-                    if (dishIngredient == null || !dishIngredient.Any())
+                    if (!dishIngredient.Any())
                     {
                         logger.LogWarning("Error 400, Dish has not any ingredients");
                         return new Response<string>(HttpStatusCode.BadRequest, "Ingredients of dish not found");
@@ -326,7 +353,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                 UserId = order.UserId,
             };
             await notificationService.CreateNotificationAsync(notification);
-            await telegramService.SendMessageToAdmin($"Username of user who ordered : {user!.Username} \nThe phonenumber of user : {user.Phone}  \nOrder info : {order.OrderInfo} \nTotal amount of order : {order.TotalAmount}  \nStatus of order : {order.OrderStatus}  \nOrder completion time in minutes : {order.OrderTimeInMinutes}");
+            await telegramService.SendMessageToAdmin($"Order id : {order.Id}  \nUsername of user who ordered : {user!.Username} \nThe phonenumber of user : {user.Phone}  \nOrder info : {order.OrderInfo} \nTotal amount of order : {order.TotalAmount}  \nStatus of order : {order.OrderStatus}  \nOrder completion time in minutes : {order.OrderTimeInMinutes}");
 
             logger.LogInformation("Finished method CreateOrderAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<string>($"Successfully created Order by Id:{newOrder.Id}");

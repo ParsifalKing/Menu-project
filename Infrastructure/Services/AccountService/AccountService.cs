@@ -125,31 +125,18 @@ public class AccountService(DataContext context, ILogger<AccountService> logger,
         var key = Encoding.UTF8.GetBytes(configuration["JWT:Key"]!);
         var securityKey = new SymmetricSecurityKey(key);
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-        var claims = new List<Claim>();
-        if (user.PathPhoto != null)
+        var claims = new List<Claim>()
         {
-            var claims1 = new List<Claim>()
-            {
             new(JwtRegisteredClaimNames.Sid, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email!),
             new(JwtRegisteredClaimNames.Name, user.Username),
             new("Phone", user.Phone),
             new("UserStatus", user.Status.ToString()),
-            new("PathPhoto", user.PathPhoto),
-            };
-            claims = claims1;
-        }
-        if (user.PathPhoto == null)
+        };
+
+        if (user.PathPhoto is not null)
         {
-            var claims2 = new List<Claim>()
-            {
-            new(JwtRegisteredClaimNames.Sid, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email!),
-            new(JwtRegisteredClaimNames.Name, user.Username),
-            new("Phone", user.Phone),
-            new("UserStatus", user.Status.ToString()),
-            };
-            claims = claims2;
+            claims.Add(new Claim("PathPhoto", user.PathPhoto));
         }
 
         //add roles
@@ -180,8 +167,7 @@ public class AccountService(DataContext context, ILogger<AccountService> logger,
     }
 
     #endregion
-
-
+    
     #region ForgotPasswordCodeGenerator
 
     public async Task<Response<string>> ForgotPasswordCodeGenerator(ForgotPasswordDto forgotPasswordDto)
@@ -218,8 +204,6 @@ public class AccountService(DataContext context, ILogger<AccountService> logger,
     }
 
     #endregion
-
-
 
     #region ResetPassword
 
@@ -264,7 +248,6 @@ public class AccountService(DataContext context, ILogger<AccountService> logger,
     }
 
     #endregion
-
 
     #region ChangePassword
 
