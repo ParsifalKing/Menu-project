@@ -8,6 +8,8 @@ using Domain.Responses;
 using Infrastructure.Data;
 using Infrastructure.Services.DishCategoryService;
 using Infrastructure.Services.FileService;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -52,6 +54,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
 
     #endregion
 
+    
     #region GetCategoryByIdAsync
 
     public async Task<Response<GetCategoryWithAllDishes>> GetCategoryByIdAsync(Guid categoryId)
@@ -92,7 +95,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                                             } : null,
                                         }).ToListAsync();
 
-            if (categoryDishes is null || !categoryDishes.Any())
+            if (!categoryDishes.Any())
             {
                 logger.LogWarning("Could not find Category with Id:{Id},time:{DateTimeNow}", categoryId, DateTimeOffset.UtcNow);
                 return new Response<GetCategoryWithAllDishes>(HttpStatusCode.BadRequest, $"Not found Category by id:{categoryId}");
@@ -104,7 +107,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                 CategoryDishes = categoryDishes.Where(x => x.CategoryIngredients != null)
                                                  .Select(x => x.CategoryIngredients).ToList(),
             };
-
+            
             logger.LogInformation("Finished method GetCategoryByIdAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<GetCategoryWithAllDishes>(categoryWithDishes);
         }
@@ -118,6 +121,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
 
     #endregion
 
+    
     #region CreateCategoryAsync
 
     public async Task<Response<string>> CreateCategoryAsync(CreateCategoryDto createCategory)

@@ -126,7 +126,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
                                               } : null,
                                           }).ToListAsync();
 
-            if (drinkIngredients is null || !drinkIngredients.Any())
+            if (!drinkIngredients.Any())
             {
                 logger.LogWarning("Could not find Drink with Id:{Id},time:{DateTimeNow}", drinkId, DateTimeOffset.UtcNow);
                 return new Response<GetDrinkWithAllIngredients>(HttpStatusCode.BadRequest, $"Not found Drink by id:{drinkId}");

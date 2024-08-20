@@ -8,7 +8,7 @@ namespace Infrastructure.Services.OrderService;
 public interface IOrderService
 {
     Task<PagedResponse<List<GetOrderDto>>> GetOrdersAsync(OrderFilter filter);
-    Task<Response<GetOrderDto>> GetOrderByIdAsync(Guid orderId);
+    Task<Response<GetOrderWithOrderDetail>> GetOrderByIdAsync(Guid orderId);
     Task<Response<GetBlockOrderControlDto>> GetBlockOrderControl();
     Task<Response<string>> CreateOrderAsync(CreateOrderDto createOrder);
     Task<Response<string>> BlockOrderControl(UpdateBlockOrderControlDto blockOrderControlDto);

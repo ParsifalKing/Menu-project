@@ -75,15 +75,22 @@ public class Seeder(DataContext context, IHashService hashService)
     {
         try
         {
-            var blockOrderControl = new BlockOrderControl()
+            var blockOrderingControl = await context.BlockOrderControl.AnyAsync();
+            if (blockOrderingControl == false)
             {
-                IsBlocked = false,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-            };
-            await context.BlockOrderControl.AddAsync(blockOrderControl);
-            await context.SaveChangesAsync();
-            return "BlockOrderControl added succesfully";
+                var blockOrderControl = new BlockOrderControl()
+                {
+                    Id = 1,
+                    IsBlocked = false,
+                    CreatedAt = DateTimeOffset.UtcNow,
+                    UpdatedAt = DateTimeOffset.UtcNow,
+                };
+                await context.BlockOrderControl.AddAsync(blockOrderControl);
+                await context.SaveChangesAsync();
+                return "BlockOrderControl added succesfully";
+            }
+            return "BlockOrderControl already exist!!!";
+
         }
         catch (Exception e)
         {
@@ -106,8 +113,8 @@ public class Seeder(DataContext context, IHashService hashService)
             {
                 var superAdmin = new User()
                 {
-                    Email = "superadmin@gmail.com",
-                    Phone = "123456789",
+                    Email = "kkirapm@gmail.com ",
+                    Phone = "918417869",
                     Username = "SuperAdmin",
                     Status = "Active",
                     CreatedAt = DateTimeOffset.UtcNow,
@@ -142,8 +149,8 @@ public class Seeder(DataContext context, IHashService hashService)
             {
                 var admin = new User()
                 {
-                    Email = "admin@gmail.com",
-                    Phone = "123456789",
+                    Email = "ymmumenu@gmail.com",
+                    Phone = "017860010",
                     Username = "Admin",
                     Status = "Active",
                     CreatedAt = DateTimeOffset.UtcNow,
@@ -173,14 +180,14 @@ public class Seeder(DataContext context, IHashService hashService)
             }
 
             //User
-            var User = await context.Users.FirstOrDefaultAsync(x => x.Username == "User");
-            if (User is null)
+            var user = await context.Users.FirstOrDefaultAsync(x => x.Username == "Eraj");
+            if (user is null)
             {
                 var newUser = new User()
                 {
-                    Email = "user@gmail.com",
-                    Phone = "123456789",
-                    Username = "User",
+                    Email = "erajismonov01@gmail.com",
+                    Phone = "905855445",
+                    Username = "Eraj",
                     Status = "Active",
                     CreatedAt = DateTimeOffset.UtcNow,
                     UpdatedAt = DateTimeOffset.UtcNow,
@@ -189,7 +196,7 @@ public class Seeder(DataContext context, IHashService hashService)
                 await context.Users.AddAsync(newUser);
                 await context.SaveChangesAsync();
 
-                var existingUser = await context.Users.FirstOrDefaultAsync(x => x.Username == "User");
+                var existingUser = await context.Users.FirstOrDefaultAsync(x => x.Username == "Eraj");
                 var existingRole = await context.Roles.FirstOrDefaultAsync(x => x.Name == Roles.User);
                 if (existingUser is not null && existingRole is not null)
                 {

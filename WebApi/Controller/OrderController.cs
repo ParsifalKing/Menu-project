@@ -70,7 +70,7 @@ public class OrderController(IOrderService _orderService) : ControllerBase
 
     [HttpPut("Block-Order")]
     [PermissionAuthorize(Permissions.Order.Edit)]
-    public async Task<IActionResult> UpdateOrder([FromQuery] UpdateBlockOrderControlDto updateBlockOrder)
+    public async Task<IActionResult> BlockOrder([FromQuery] UpdateBlockOrderControlDto updateBlockOrder)
     {
         var result = await _orderService.BlockOrderControl(updateBlockOrder);
         return StatusCode(result.StatusCode, result);

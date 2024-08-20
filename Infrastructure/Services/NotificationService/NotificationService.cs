@@ -15,6 +15,7 @@ namespace Infrastructure.Services.NotificationService;
 
 public class NotificationService(ILogger<NotificationService> logger, DataContext context, IEmailService emailService) : INotificationService
 {
+    
     #region GetNotificationsAsync
 
     public async Task<PagedResponse<List<GetNotificationDto>>> GetNotificationsAsync(NotificationFilter filter)
@@ -128,7 +129,6 @@ public class NotificationService(ILogger<NotificationService> logger, DataContex
 
     #endregion
 
-
     #region SendOrderNotificationAsync
 
     public async Task<Response<string>> SendOrderNotificationAsync(CreateNotificationDto createNotification)
@@ -150,12 +150,14 @@ public class NotificationService(ILogger<NotificationService> logger, DataContex
                 return new Response<string>(HttpStatusCode.BadRequest, $"User with id:{createNotification.UserId} not found ");
             }
 
-            var orderInfo = $"Order info : {order!.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
+            var orderInfoForAdmin = $"Order Id : {order.Id} <br>  Order info : {order!.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
 
-            await emailService.SendEmail(new EmailMessageDto(new[] { "parsifalking0@gmail.com" }, "All information about order ",
-                $"<h1>{orderInfo}</h1>"), TextFormat.Html);
+            var orderInfoForUser = $"Order info : {order!.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
+
+            await emailService.SendEmail(new EmailMessageDto(new[] { "ymmumenu@gmail.com" }, "All information about order ",
+                $"<h1>{orderInfoForAdmin}</h1>"), TextFormat.Html);
             await emailService.SendEmail(new EmailMessageDto(new[] { user.Email }, "All information about order ",
-            $"<h1>{orderInfo}</h1>"), TextFormat.Html);
+            $"<h1>{orderInfoForUser}</h1>"), TextFormat.Html);
 
             logger.LogInformation("Finished method SendNotificationAsync in time {DateTime}", DateTime.UtcNow);
             return new Response<string>("Notification successfully sent!!! ");
