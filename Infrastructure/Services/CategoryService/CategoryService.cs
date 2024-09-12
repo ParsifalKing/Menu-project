@@ -189,7 +189,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
             if (existing == null)
             {
                 logger.LogWarning("Category not found by id:{Id},time:{Time}", updateCategory.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest, $"Not found Booking by id:{updateCategory.Id}");
+                return new Response<string>(HttpStatusCode.BadRequest, $"Not found category by id:{updateCategory.Id}");
             }
 
             var foundCategoryDishes = await context.DishCategory.Where(x => x.CategoryId == updateCategory.Id).ToListAsync();
