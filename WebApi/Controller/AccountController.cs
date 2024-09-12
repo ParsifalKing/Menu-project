@@ -1,9 +1,7 @@
-using System.Net;
+using Domain.Constants;
 using Domain.DTOs.AccountDTOs;
-using Domain.Responses;
 using Infrastructure.Permissions;
 using Infrastructure.Services.AccountService;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controller;
@@ -12,21 +10,21 @@ namespace WebApi.Controller;
 [Route("api/[controller]")]
 public class AccountController(IAccountService authService) : ControllerBase
 {
-    [HttpPost("login")]
+    [HttpPost("Login")]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
     {
         var response = await authService.Login(loginDto);
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpPost("register")]
+    [HttpPost("Register")]
     public async Task<IActionResult> Register([FromQuery] RegisterDto registerDto)
     {
         var response = await authService.Register(registerDto);
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpPut("change-password")]
+    [HttpPut("Change-Password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
     {
         var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == "sid")!.Value);
@@ -34,7 +32,7 @@ public class AccountController(IAccountService authService) : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
-    [HttpPut("forgot-password")]
+    [HttpPut("Forgot-Password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto forgotPasswordDto)
     {
         var result = await authService.ForgotPasswordCodeGenerator(forgotPasswordDto);
@@ -42,7 +40,7 @@ public class AccountController(IAccountService authService) : ControllerBase
     }
 
 
-    [HttpPut("reset-password")]
+    [HttpPut("Reset-Password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto resetPasswordDto)
     {
         var result = await authService.ResetPassword(resetPasswordDto);
@@ -50,7 +48,8 @@ public class AccountController(IAccountService authService) : ControllerBase
     }
 
 
-    [HttpDelete("delete-account")]
+    [HttpDelete("Delete-Account")]
+    [PermissionAuthorize(Permissions.User.Delete)]
     public async Task<IActionResult> DeleteAccount()
     {
         var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == "sid")!.Value);

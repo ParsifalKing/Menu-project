@@ -105,6 +105,7 @@ public static class Permissions
         public const string View = "Permissions.User.View";
         public const string Create = "Permissions.User.Create";
         public const string Edit = "Permissions.User.Edit";
+        public const string Delete = "Permissions.User.Delete";
     }
 
     public static class UserRole

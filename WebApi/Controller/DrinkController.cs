@@ -6,7 +6,6 @@ using Infrastructure.Services.DrinkService;
 using Domain.DTOs.DrinkDTOs;
 using Domain.DTOs.DrinkIngredientDTOs;
 using Newtonsoft.Json;
-using Domain.Entities;
 
 namespace WebApi.Controller;
 
