@@ -3,7 +3,6 @@ using Domain.DTOs.RoleDTOs;
 using Domain.Filters;
 using Infrastructure.Permissions;
 using Infrastructure.Services.RoleService;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controller;
@@ -12,7 +11,7 @@ namespace WebApi.Controller;
 [Route("api/[controller]")]
 public class RoleController(IRoleService roleService) : ControllerBase
 {
-    [HttpGet("roles")]
+    [HttpGet("Roles")]
     [PermissionAuthorize(Permissions.Role.View)]
     public async Task<IActionResult> GetRoles([FromQuery] RoleFilter filter)
     {
@@ -28,7 +27,7 @@ public class RoleController(IRoleService roleService) : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpPost("create")]
+    [HttpPost("Create")]
     [PermissionAuthorize(Permissions.Role.Create)]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleDto createRole)
     {
@@ -37,7 +36,7 @@ public class RoleController(IRoleService roleService) : ControllerBase
     }
 
 
-    [HttpPut("update")]
+    [HttpPut("Update")]
     [PermissionAuthorize(Permissions.Role.Edit)]
     public async Task<IActionResult> UpdateRole([FromBody] UpdateRoleDto updateRole)
     {

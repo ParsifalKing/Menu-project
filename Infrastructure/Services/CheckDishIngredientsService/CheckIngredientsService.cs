@@ -13,7 +13,7 @@ public class CheckIngredientsService(ILogger<CheckIngredientsService> logger, Da
     {
         logger.LogInformation("Start method CheckDishIngredients in time:{DateTime}", DateTimeOffset.UtcNow);
         var ingredients = (from i in context.Ingredients
-                           join di in context.DishIngredient on i.Id equals di.IngredientId
+                           join di in context.DishesIngredients on i.Id equals di.IngredientId
                            join d in context.Dishes on di.DishId equals d.Id
                            where d.Id == dishId
                            select new
@@ -40,7 +40,7 @@ public class CheckIngredientsService(ILogger<CheckIngredientsService> logger, Da
     {
         logger.LogInformation("Start method CheckDrinkIngredients in time:{DateTime}", DateTimeOffset.UtcNow);
         var ingredients = (from i in context.Ingredients
-                           join di in context.DrinkIngredient on i.Id equals di.IngredientId
+                           join di in context.DrinksIngredients on i.Id equals di.IngredientId
                            join d in context.Drinks on di.DrinkId equals d.Id
                            where d.Id == drinkId
                            select new

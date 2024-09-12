@@ -100,7 +100,6 @@ public class Seeder(DataContext context, IHashService hashService)
 
     #endregion
 
-
     #region DefaultUsers
 
     private async Task DefaultUsers()
@@ -224,7 +223,6 @@ public class Seeder(DataContext context, IHashService hashService)
 
     #endregion
 
-
     #region SeedClaimsForSuperAdmin
 
     private async Task SeedClaimsForSuperAdmin()
@@ -305,6 +303,7 @@ public class Seeder(DataContext context, IHashService hashService)
             new("Permissions", Domain.Constants.Permissions.User.View),
             new("Permissions", Domain.Constants.Permissions.User.Create),
             new("Permissions", Domain.Constants.Permissions.User.Edit),
+            new("Permissions", Domain.Constants.Permissions.User.Delete),
 
             new("Permissions", Domain.Constants.Permissions.UserRole.View),
         };
@@ -337,6 +336,7 @@ public class Seeder(DataContext context, IHashService hashService)
             new("Permissions", Domain.Constants.Permissions.Drink.View),
             new("Permissions", Domain.Constants.Permissions.Role.View),
             new("Permissions", Domain.Constants.Permissions.User.Edit),
+            new("Permissions", Domain.Constants.Permissions.User.Delete),
             new("Permissions", Domain.Constants.Permissions.Order.Create),
             new("Permissions", Domain.Constants.Permissions.Order.View),
         };
@@ -352,8 +352,7 @@ public class Seeder(DataContext context, IHashService hashService)
     }
 
     #endregion
-
-
+    
 }
 
 

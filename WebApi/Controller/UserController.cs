@@ -1,10 +1,8 @@
-using System.Net;
 using Domain.Constants;
 using Domain.DTOs.UserDTOs;
 using Domain.Filters;
 using Infrastructure.Permissions;
 using Infrastructure.Services.UserService;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebApi.Controller;
@@ -14,7 +12,7 @@ namespace WebApi.Controller;
 public class UserController(IUserService userService) : ControllerBase
 
 {
-    [HttpGet("users")]
+    [HttpGet("Users")]
     [PermissionAuthorize(Permissions.User.View)]
     public async Task<IActionResult> GetUsers([FromQuery] UserFilter filter)
     {
@@ -31,7 +29,7 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
 
-    [HttpPut("update")]
+    [HttpPut("Update")]
     [PermissionAuthorize(Permissions.User.Edit)]
     public async Task<IActionResult> UpdateUser([FromQuery] UpdateUserDto updateUser)
     {

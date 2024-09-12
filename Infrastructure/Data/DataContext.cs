@@ -9,11 +9,11 @@ public class DataContext : DbContext
 
 
     public DbSet<Category> Categories { get; set; }
-    public DbSet<DishCategory> DishCategory { get; set; }
+    public DbSet<DishCategory> DishesCategories { get; set; }
     public DbSet<Dish> Dishes { get; set; }
-    public DbSet<DishIngredient> DishIngredient { get; set; }
+    public DbSet<DishIngredient> DishesIngredients { get; set; }
     public DbSet<Drink> Drinks { get; set; }
-    public DbSet<DrinkIngredient> DrinkIngredient { get; set; }
+    public DbSet<DrinkIngredient> DrinksIngredients { get; set; }
     public DbSet<Ingredient> Ingredients { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderDetail> OrderDetails { get; set; }

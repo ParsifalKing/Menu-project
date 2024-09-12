@@ -21,7 +21,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         try
         {
             logger.LogInformation("Starting method GetDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            var dishCategory = context.DishCategory.AsQueryable();
+            var dishCategory = context.DishesCategories.AsQueryable();
             var checkDishes = await context.Dishes.ToListAsync();
 
             foreach (var item in checkDishes)
@@ -82,7 +82,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         {
             logger.LogInformation("Starting method GetDishCategoryByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var existing = await context.DishCategory.Include(x => x.Dish)
+            var existing = await context.DishesCategories.Include(x => x.Dish)
             .Include(x => x.Category)
             .Select(x => new GetDishCategoryDto()
             {
@@ -141,7 +141,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         try
         {
             logger.LogInformation("Starting method CreateDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            var existing = await context.DishCategory.AnyAsync(x => x.CategoryId == createDishCategory.CategoryId && x.DishId == createDishCategory.DishId);
+            var existing = await context.DishesCategories.AnyAsync(x => x.CategoryId == createDishCategory.CategoryId && x.DishId == createDishCategory.DishId);
             if (existing == true)
             {
                 logger.LogWarning("Ups - error 400, this dish with id - {DishId}, already has this category with id - {CategoryId}. {Time}",
@@ -157,7 +157,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
                 UpdatedAt = DateTimeOffset.UtcNow,
             };
 
-            await context.DishCategory.AddAsync(newDishCategory);
+            await context.DishesCategories.AddAsync(newDishCategory);
             await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method CreateDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
@@ -180,7 +180,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         {
             logger.LogInformation("Starting method UpdateDishCategoryAsync in time:{DateTime}", DateTimeOffset.UtcNow);
 
-            var existing = await context.DishCategory.FirstOrDefaultAsync(x => x.Id == updateDishCategory.Id);
+            var existing = await context.DishesCategories.FirstOrDefaultAsync(x => x.Id == updateDishCategory.Id);
             if (existing == null)
             {
                 logger.LogWarning("DishCategory not found by id:{Id}, time:{Time}",
@@ -214,7 +214,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         {
             logger.LogInformation("Starting method DeleteDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var DishCategory = await context.DishCategory.Where(x => x.CategoryId == dishCategoryDto.CategoryId && x.DishId == dishCategoryDto.DishId).ExecuteDeleteAsync();
+            var DishCategory = await context.DishesCategories.Where(x => x.CategoryId == dishCategoryDto.CategoryId && x.DishId == dishCategoryDto.DishId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return DishCategory == 0

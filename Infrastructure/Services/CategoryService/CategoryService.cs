@@ -54,7 +54,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
 
     #endregion
 
-    
+
     #region GetCategoryByIdAsync
 
     public async Task<Response<GetCategoryWithAllDishes>> GetCategoryByIdAsync(Guid categoryId)
@@ -65,7 +65,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
 
             var categoryDishes = await (from c in context.Categories
                                         where c.Id == categoryId
-                                        join dc in context.DishCategory on c.Id equals dc.CategoryId into CategoryIngGroup
+                                        join dc in context.DishesCategories on c.Id equals dc.CategoryId into CategoryIngGroup
                                         from dc in CategoryIngGroup.DefaultIfEmpty()
                                         join d in context.Dishes on dc.DishId equals d.Id into ingGroup
                                         from d in ingGroup.DefaultIfEmpty()
@@ -107,7 +107,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                 CategoryDishes = categoryDishes.Where(x => x.CategoryIngredients != null)
                                                  .Select(x => x.CategoryIngredients).ToList(),
             };
-            
+
             logger.LogInformation("Finished method GetCategoryByIdAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             return new Response<GetCategoryWithAllDishes>(categoryWithDishes);
         }
@@ -121,7 +121,7 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
 
     #endregion
 
-    
+
     #region CreateCategoryAsync
 
     public async Task<Response<string>> CreateCategoryAsync(CreateCategoryDto createCategory)
@@ -192,8 +192,8 @@ public class CategoryService(ILogger<CategoryService> logger, DataContext contex
                 return new Response<string>(HttpStatusCode.BadRequest, $"Not found category by id:{updateCategory.Id}");
             }
 
-            var foundCategoryDishes = await context.DishCategory.Where(x => x.CategoryId == updateCategory.Id).ToListAsync();
-            if (foundCategoryDishes != null) context.DishCategory.RemoveRange(foundCategoryDishes);
+            var foundCategoryDishes = await context.DishesCategories.Where(x => x.CategoryId == updateCategory.Id).ToListAsync();
+            if ( foundCategoryDishes.Any() ) context.DishesCategories.RemoveRange(foundCategoryDishes);
 
             existing!.Name = updateCategory.Name;
             existing.Description = updateCategory.Description;

@@ -38,7 +38,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
             {
                 // filter with ingredient name
                 var query = (from d in drinks
-                             join di in context.DrinkIngredient on d.Id equals di.DrinkId
+                             join di in context.DrinksIngredients on d.Id equals di.DrinkId
                              join i in context.Ingredients on di.IngredientId equals i.Id
                              where i.Name == filter.IngredientName
                              select new
@@ -94,7 +94,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
 
             var drinkIngredients = await (from d in context.Drinks
                                           where d.Id == drinkId
-                                          join di in context.DrinkIngredient on d.Id equals di.DrinkId into DrinkIngGroup
+                                          join di in context.DrinksIngredients on d.Id equals di.DrinkId into DrinkIngGroup
                                           from di in DrinkIngGroup.DefaultIfEmpty()
                                           join i in context.Ingredients on di.IngredientId equals i.Id into ingGroup
                                           from i in ingGroup.DefaultIfEmpty()
@@ -236,7 +236,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
             {
                 foreach (var drinkIngredient in updateDrink.DrinkIngredients)
                 {
-                    var existingIngredient = await context.DrinkIngredient.AnyAsync(x => x.IngredientId == drinkIngredient.IngredientId && x.DrinkId == drinkIngredient.DrinkId);
+                    var existingIngredient = await context.DrinksIngredients.AnyAsync(x => x.IngredientId == drinkIngredient.IngredientId && x.DrinkId == drinkIngredient.DrinkId);
                     if (existingIngredient)
                     {
                         logger.LogWarning("Ups - error 400, this Drink with id - {DrinkId}, already has this Ingredient with id - {IngredientId}. {Time}",
@@ -264,8 +264,8 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
                 new Response<string>(HttpStatusCode.BadRequest, $"Not found Drink by id:{updateDrink.Id}");
             }
 
-            var foundDrinkIngredients = await context.DrinkIngredient.Where(x => x.DrinkId == updateDrink.Id).ToListAsync();
-            if (foundDrinkIngredients != null) context.DrinkIngredient.RemoveRange(foundDrinkIngredients);
+            var foundDrinkIngredients = await context.DrinksIngredients.Where(x => x.DrinkId == updateDrink.Id).ToListAsync();
+            if (foundDrinkIngredients != null) context.DrinksIngredients.RemoveRange(foundDrinkIngredients);
 
 
             bool areAllIngredients = await checkDrinkIngredientsService.CheckDrinkIngredients(updateDrink.Id);

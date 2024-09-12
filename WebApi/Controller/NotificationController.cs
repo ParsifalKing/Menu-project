@@ -27,7 +27,7 @@ public class NotificationController(INotificationService _notificationService) :
         return StatusCode(response.StatusCode, response);
     }
 
-    [HttpPost("create-notification")]
+    [HttpPost("Create-Notification")]
     [PermissionAuthorize(Permissions.Notification.Create)]
     public async Task<IActionResult> CreateNotification([FromBody] CreateNotificationDto createNotification)
     {

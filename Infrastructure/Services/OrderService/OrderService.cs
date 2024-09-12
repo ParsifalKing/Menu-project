@@ -282,7 +282,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                 if (orderDetail.DishId != null)
                 {
                     var dishIngredient = (from i in context.Ingredients
-                                          join di in context.DishIngredient on i.Id equals di.IngredientId
+                                          join di in context.DishesIngredients on i.Id equals di.IngredientId
                                           where di.DishId == orderDetail.DishId
                                           select new
                                           {
@@ -295,10 +295,8 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                         logger.LogWarning("Error 400, Dish has not any ingredients");
                         return new Response<string>(HttpStatusCode.BadRequest, "Ingredients of dish not found");
                     }
-
-                    if (dishIngredient != null)
-                    {
-                        Guid dishId = Guid.Empty;
+                    
+                    Guid dishId = Guid.Empty;
                         foreach (var item in dishIngredient)
                         {
                             if (item.Ingredients.Count < item.DishIngredient.Quantity)
@@ -312,12 +310,12 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                             dishId = item.DishIngredient.DishId;
                         }
                         await checkIngredientsService.CheckDishIngredients(dishId);
-                    }
+                    
                 }
                 else if (orderDetail.DrinkId != null)
                 {
                     var drinkIngredient = (from i in context.Ingredients
-                                           join di in context.DrinkIngredient on i.Id equals di.IngredientId
+                                           join di in context.DrinksIngredients on i.Id equals di.IngredientId
                                            where di.DrinkId == orderDetail.DrinkId
                                            select new
                                            {

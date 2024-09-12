@@ -22,7 +22,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
         try
         {
             logger.LogInformation("Starting method GetDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            var dishIngredient = context.DishIngredient.AsQueryable();
+            var dishIngredient = context.DishesIngredients.AsQueryable();
             var checkDishes = await context.Dishes.ToListAsync();
 
             foreach (var dish in checkDishes)
@@ -89,7 +89,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
         {
             logger.LogInformation("Starting method GetDishIngredientByIdAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var existing = await context.DishIngredient.Include(x => x.Dish)
+            var existing = await context.DishesIngredients.Include(x => x.Dish)
             .Include(x => x.Ingredient)
             .Select(x => new GetDishIngredientDto()
             {
@@ -154,7 +154,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
         try
         {
             logger.LogInformation("Starting method CreateDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            var existing = await context.DishIngredient.AnyAsync(x => x.IngredientId == createDishIngredient.IngredientId && x.DishId == createDishIngredient.DishId);
+            var existing = await context.DishesIngredients.AnyAsync(x => x.IngredientId == createDishIngredient.IngredientId && x.DishId == createDishIngredient.DishId);
             if (existing == true)
             {
                 logger.LogWarning("Ups - error 400, this dish with id - {DishId}, already has this Ingredient with id - {IngredientId}. {Time}",
@@ -177,7 +177,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
                 UpdatedAt = DateTimeOffset.UtcNow,
             };
 
-            await context.DishIngredient.AddAsync(newDishIngredient);
+            await context.DishesIngredients.AddAsync(newDishIngredient);
             await context.SaveChangesAsync();
 
             logger.LogInformation("Finished method CreateDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
@@ -200,7 +200,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
         {
             logger.LogInformation("Starting method UpdateDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var existing = await context.DishIngredient.FirstOrDefaultAsync(x => x.Id == updateDishIngredient.Id);
+            var existing = await context.DishesIngredients.FirstOrDefaultAsync(x => x.Id == updateDishIngredient.Id);
             if (existing == null)
             {
                 logger.LogWarning("DishIngredient not found by Id:{Id} , time:{Time}",
@@ -241,7 +241,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
         {
             logger.LogInformation("Starting method DeleteDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var dishIngredient = await context.DishIngredient.Where(x => x.IngredientId == ingredientId && x.DishId == dishId).ExecuteDeleteAsync();
+            var dishIngredient = await context.DishesIngredients.Where(x => x.IngredientId == ingredientId && x.DishId == dishId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return dishIngredient == 0

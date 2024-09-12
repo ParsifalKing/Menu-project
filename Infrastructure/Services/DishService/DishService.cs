@@ -105,7 +105,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
             {
                 // filter with ingredient name
                 var query = (from d in dishes
-                             join di in context.DishIngredient on d.Id equals di.DishId
+                             join di in context.DishesIngredients on d.Id equals di.DishId
                              join i in context.Ingredients on di.IngredientId equals i.Id
                              where i.Name == filter.IngredientName
                              select new
@@ -163,7 +163,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
 
             var dishIngredients = await (from d in context.Dishes
                                          where d.Id == dishId
-                                         join di in context.DishIngredient on d.Id equals di.DishId into dishIngGroup
+                                         join di in context.DishesIngredients on d.Id equals di.DishId into dishIngGroup
                                          from di in dishIngGroup.DefaultIfEmpty()
                                          join i in context.Ingredients on di.IngredientId equals i.Id into ingGroup
                                          from i in ingGroup.DefaultIfEmpty()
@@ -326,7 +326,7 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
             {
                 foreach (var dishIngredient in updateDish.DishIngredients)
                 {
-                    var existingIngredient = await context.DishIngredient.AnyAsync(x => x.IngredientId == dishIngredient.IngredientId && x.DishId == dishIngredient.DishId);
+                    var existingIngredient = await context.DishesIngredients.AnyAsync(x => x.IngredientId == dishIngredient.IngredientId && x.DishId == dishIngredient.DishId);
                     if (existingIngredient)
                     {
                         logger.LogWarning("Ups - error 400, this dish with id - {DishId}, already has this Ingredient with id - {IngredientId}. {Time}",
@@ -353,8 +353,8 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
                 new Response<string>(HttpStatusCode.BadRequest, $"Not found Dish by id:{updateDish.Id}");
             }
 
-            var foundDishIngredients = await context.DishIngredient.Where(x => x.DishId == updateDish.Id).ToListAsync();
-            if (foundDishIngredients != null) context.DishIngredient.RemoveRange(foundDishIngredients);
+            var foundDishIngredients = await context.DishesIngredients.Where(x => x.DishId == updateDish.Id).ToListAsync();
+            if (foundDishIngredients != null) context.DishesIngredients.RemoveRange(foundDishIngredients);
 
             bool areAllIngredients = await checkDishIngredientsService.CheckDishIngredients(updateDish.Id);
             existing!.AreAllIngredients = areAllIngredients;
