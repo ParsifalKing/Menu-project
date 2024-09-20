@@ -155,7 +155,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
         {
             logger.LogInformation("Starting method CreateDishIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             var existing = await context.DishesIngredients.AnyAsync(x => x.IngredientId == createDishIngredient.IngredientId && x.DishId == createDishIngredient.DishId);
-            if (existing == true)
+            if (existing)
             {
                 logger.LogWarning("Ups - error 400, this dish with id - {DishId}, already has this Ingredient with id - {IngredientId}. {Time}",
                 createDishIngredient.DishId, createDishIngredient.IngredientId, DateTimeOffset.UtcNow);
@@ -205,7 +205,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
             {
                 logger.LogWarning("DishIngredient not found by Id:{Id} , time:{Time}",
                     updateDishIngredient.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest,
+                return new Response<string>(HttpStatusCode.BadRequest,
                     $"Not found DishIngredient by Id:{updateDishIngredient.Id}");
             }
             if (updateDishIngredient.Quantity <= 0)
@@ -214,7 +214,7 @@ public class DishIngredientService(ILogger<DishIngredientService> logger, DataCo
                 return new Response<string>(HttpStatusCode.BadRequest, $"Quantity of ingredients for dish cannot be negative: {updateDishIngredient.Quantity}");
             }
 
-            existing!.DishId = updateDishIngredient.DishId;
+            existing.DishId = updateDishIngredient.DishId;
             existing.IngredientId = updateDishIngredient.IngredientId;
             existing.Description = updateDishIngredient.Description;
             existing.Quantity = updateDishIngredient.Quantity;

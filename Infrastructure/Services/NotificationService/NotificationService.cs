@@ -9,7 +9,6 @@ using Infrastructure.Services.EmailService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MimeKit.Text;
-using Org.BouncyCastle.Math.EC.Rfc7748;
 
 namespace Infrastructure.Services.NotificationService;
 
@@ -24,12 +23,12 @@ public class NotificationService(ILogger<NotificationService> logger, DataContex
         {
             logger.LogInformation("Starting method {GetNotificationsAsync} in time:{DateTime} ", "GetNotificationsAsync",
                 DateTimeOffset.UtcNow);
-            var Notifications = context.Notifications.AsQueryable();
+            var notifications = context.Notifications.AsQueryable();
 
             if (filter.SendDate != null)
-                Notifications = Notifications.Where(x => x.SendDate >= filter.SendDate);
+                notifications = notifications.Where(x => x.SendDate >= filter.SendDate);
 
-            var response = await Notifications.Select(x => new GetNotificationDto()
+            var response = await notifications.Select(x => new GetNotificationDto()
             {
                 SendDate = x.SendDate,
                 Id = x.Id,
@@ -39,7 +38,7 @@ public class NotificationService(ILogger<NotificationService> logger, DataContex
                 UpdatedAt = x.UpdatedAt,
             }).Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
 
-            var totalRecord = await Notifications.CountAsync();
+            var totalRecord = await notifications.CountAsync();
 
             logger.LogInformation("Finished method {GetNotificationsAsync} in time:{DateTime} ", "GetNotificationsAsync",
                 DateTimeOffset.UtcNow);
@@ -150,9 +149,9 @@ public class NotificationService(ILogger<NotificationService> logger, DataContex
                 return new Response<string>(HttpStatusCode.BadRequest, $"User with id:{createNotification.UserId} not found ");
             }
 
-            var orderInfoForAdmin = $"Order Id : {order.Id} <br>  Order info : {order!.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
+            var orderInfoForAdmin = $"Order Id : {order.Id} <br>  Order info : {order.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
 
-            var orderInfoForUser = $"Order info : {order!.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
+            var orderInfoForUser = $"Order info : {order.OrderInfo} <br> Total amount of order : {order.TotalAmount} <br> Status of order : {order.OrderStatus} <br> Order completion time in minutes : {order.OrderTimeInMinutes} <br> Username of user who ordered : {user.Username} <br> The phonenumber of user : {user.Phone}";
 
             await emailService.SendEmail(new EmailMessageDto(new[] { "ymmumenu@gmail.com" }, "All information about order ",
                 $"<h1>{orderInfoForAdmin}</h1>"), TextFormat.Html);

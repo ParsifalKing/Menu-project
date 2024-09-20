@@ -22,15 +22,15 @@ public class DrinkIngredientService(ILogger<DrinkIngredientService> logger, Data
         try
         {
             logger.LogInformation("Starting method GetDrinkIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            var DrinkIngredient = context.DrinksIngredients.AsQueryable();
-            var checkDrinkes = await context.Drinks.ToListAsync();
+            var drinkIngredient = context.DrinksIngredients.AsQueryable();
+            var checkDrinks = await context.Drinks.ToListAsync();
 
-            foreach (var drink in checkDrinkes)
+            foreach (var drink in checkDrinks)
             {
                 await checkIngredientsService.CheckDrinkIngredients(drink.Id);
             }
 
-            var response = await DrinkIngredient.Include(x => x.Drink)
+            var response = await drinkIngredient.Include(x => x.Drink)
             .Include(x => x.Ingredient)
             .Select(x => new GetDrinkIngredientDto()
             {
@@ -66,7 +66,7 @@ public class DrinkIngredientService(ILogger<DrinkIngredientService> logger, Data
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
             }).Skip((filter.PageNumber - 1) * filter.PageSize).Take(filter.PageSize).ToListAsync();
-            var totalRecord = await DrinkIngredient.CountAsync();
+            var totalRecord = await drinkIngredient.CountAsync();
 
             logger.LogInformation("Finished method GetDrinkIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             return new PagedResponse<List<GetDrinkIngredientDto>>(response, filter.PageNumber, filter.PageSize, totalRecord);
@@ -153,7 +153,7 @@ public class DrinkIngredientService(ILogger<DrinkIngredientService> logger, Data
         {
             logger.LogInformation("Starting method CreateDrinkIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             var existing = await context.DrinksIngredients.AnyAsync(x => x.IngredientId == createDrinkIngredient.IngredientId && x.DrinkId == createDrinkIngredient.DrinkId);
-            if (existing == true)
+            if (existing)
             {
                 logger.LogWarning("Ups - error 400, this Drink with id - {drinkId}, already has this Ingredient with id - {IngredientId}. {Time}",
                 createDrinkIngredient.DrinkId, createDrinkIngredient.IngredientId, DateTimeOffset.UtcNow);
@@ -203,7 +203,7 @@ public class DrinkIngredientService(ILogger<DrinkIngredientService> logger, Data
             {
                 logger.LogWarning("DrinkIngredient not found by Id:{Id} , time:{Time}",
                     updateDrinkIngredient.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest,
+                return new Response<string>(HttpStatusCode.BadRequest,
                     $"Not found DrinkIngredient by Id:{updateDrinkIngredient.Id}");
             }
             if (updateDrinkIngredient.Quantity <= 0)
@@ -212,7 +212,7 @@ public class DrinkIngredientService(ILogger<DrinkIngredientService> logger, Data
                 return new Response<string>(HttpStatusCode.BadRequest, $"Quantity of ingredients for Drink cannot be negative: {updateDrinkIngredient.Quantity}");
             }
 
-            existing!.DrinkId = updateDrinkIngredient.DrinkId;
+            existing.DrinkId = updateDrinkIngredient.DrinkId;
             existing.IngredientId = updateDrinkIngredient.IngredientId;
             existing.Description = updateDrinkIngredient.Description;
             existing.Quantity = updateDrinkIngredient.Quantity;
@@ -239,10 +239,10 @@ public class DrinkIngredientService(ILogger<DrinkIngredientService> logger, Data
         {
             logger.LogInformation("Starting method DeleteDrinkIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var DrinkIngredient = await context.DrinksIngredients.Where(x => x.IngredientId == ingredientId && x.DrinkId == drinkId).ExecuteDeleteAsync();
+            var drinkIngredient = await context.DrinksIngredients.Where(x => x.IngredientId == ingredientId && x.DrinkId == drinkId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteDrinkIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return DrinkIngredient == 0
+            return drinkIngredient == 0
                 ? new Response<bool>(HttpStatusCode.BadRequest, $"DrinkIngredient not found by IngredientId:{ingredientId} and drinkId:{drinkId}")
                 : new Response<bool>(true);
         }
