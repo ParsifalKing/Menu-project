@@ -142,7 +142,7 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         {
             logger.LogInformation("Starting method CreateDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             var existing = await context.DishesCategories.AnyAsync(x => x.CategoryId == createDishCategory.CategoryId && x.DishId == createDishCategory.DishId);
-            if (existing == true)
+            if (existing)
             {
                 logger.LogWarning("Ups - error 400, this dish with id - {DishId}, already has this category with id - {CategoryId}. {Time}",
                 createDishCategory.DishId, createDishCategory.CategoryId, DateTimeOffset.UtcNow);
@@ -185,11 +185,11 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
             {
                 logger.LogWarning("DishCategory not found by id:{Id}, time:{Time}",
                     updateDishCategory.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest,
+                return new Response<string>(HttpStatusCode.BadRequest,
                     $"Not found DishCategory by Id:{updateDishCategory.Id}");
             }
 
-            existing!.DishId = updateDishCategory.DishId;
+            existing.DishId = updateDishCategory.DishId;
             existing.CategoryId = updateDishCategory.CategoryId;
             existing.UpdatedAt = DateTimeOffset.UtcNow;
             await context.SaveChangesAsync();
@@ -214,10 +214,10 @@ public class DishCategoryService(ILogger<DishCategoryService> logger, DataContex
         {
             logger.LogInformation("Starting method DeleteDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var DishCategory = await context.DishesCategories.Where(x => x.CategoryId == dishCategoryDto.CategoryId && x.DishId == dishCategoryDto.DishId).ExecuteDeleteAsync();
+            var dishCategory = await context.DishesCategories.Where(x => x.CategoryId == dishCategoryDto.CategoryId && x.DishId == dishCategoryDto.DishId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteDishCategoryAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return DishCategory == 0
+            return dishCategory == 0
                 ? new Response<bool>(HttpStatusCode.BadRequest, $"DishCategory not found by categoryId:{dishCategoryDto.CategoryId} and dishId:{dishCategoryDto.DishId}")
                 : new Response<bool>(true);
         }

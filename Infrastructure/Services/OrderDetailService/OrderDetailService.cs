@@ -58,6 +58,7 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
 
     #endregion
 
+    
     #region GetOrderDetailByIdAsync
 
     public async Task<Response<GetOrderDetailDto>> GetOrderDetailByIdAsync(Guid orderDetailId)
@@ -96,6 +97,7 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
 
     #endregion
 
+    
     #region CreateOrderDetailAsync
 
     public async Task<Response<string>> CreateOrderDetailAsync(CreateOrderDetailDto createOrderDetail)
@@ -105,8 +107,8 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
             logger.LogInformation("Starting method CreateOrderDetailAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             if (createOrderDetail.DishId != null && createOrderDetail.DrinkId != null)
             {
-                logger.LogWarning("Error, one OrderDetail connot have a dish and drink");
-                return new Response<string>(HttpStatusCode.BadRequest, "Error, one OrderDetail connot have a dish and drink");
+                logger.LogWarning("Error, one OrderDetail cannot have a dish and drink");
+                return new Response<string>(HttpStatusCode.BadRequest, "Error, one OrderDetail cannot have a dish and drink");
             }
             if (createOrderDetail.DishId == null && createOrderDetail.DrinkId == null)
             {
@@ -143,8 +145,7 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
 
     #endregion
 
-
-
+    
     #region UpdateOrderDetailAsync
 
     public async Task<Response<string>> UpdateOrderDetailAsync(UpdateOrderDetailDto updateOrderDetail)
@@ -157,12 +158,12 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
             if (existing == null)
             {
                 logger.LogWarning("OrderDetail not found by id:{Id},time:{Time}", updateOrderDetail.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest, $"Not found OrderDetail by id:{updateOrderDetail.Id}");
+                return new Response<string>(HttpStatusCode.BadRequest, $"Not found OrderDetail by id:{updateOrderDetail.Id}");
             }
             if (updateOrderDetail.DishId != null && updateOrderDetail.DrinkId != null)
             {
-                logger.LogWarning("Error, one OrderDetail connot have a dish and drink");
-                return new Response<string>(HttpStatusCode.BadRequest, "Error, one OrderDetail connot have a dish and drink");
+                logger.LogWarning("Error, one OrderDetail cannot have a dish and drink");
+                return new Response<string>(HttpStatusCode.BadRequest, "Error, one OrderDetail cannot have a dish and drink");
             }
             if (updateOrderDetail.DishId == null && updateOrderDetail.DrinkId == null)
             {
@@ -174,7 +175,7 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
             else if (updateOrderDetail.DrinkId != null) unitPrice = context.Drinks.First(x => x.Id == updateOrderDetail.DrinkId).Price;
 
 
-            existing!.UnitPrice = unitPrice;
+            existing.UnitPrice = unitPrice;
             existing.OrderId = updateOrderDetail.OrderId;
             existing.DishId = updateOrderDetail.DishId;
             existing.DrinkId = updateOrderDetail.DrinkId;
@@ -194,8 +195,7 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
 
     #endregion
 
-
-
+    
     #region DeleteOrderDetailAsync
 
     public async Task<Response<bool>> DeleteOrderDetailAsync(Guid orderDetailId)
@@ -204,10 +204,10 @@ public class OrderDetailService(ILogger<OrderDetailService> logger, DataContext 
         {
             logger.LogInformation("Starting method DeleteOrderDetailAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var OrderDetail = await context.OrderDetails.Where(x => x.Id == orderDetailId).ExecuteDeleteAsync();
+            var orderDetail = await context.OrderDetails.Where(x => x.Id == orderDetailId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteOrderDetailAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return OrderDetail == 0
+            return orderDetail == 0
                 ? new Response<bool>(HttpStatusCode.BadRequest, $"OrderDetail not found by id:{orderDetailId}")
                 : new Response<bool>(true);
         }

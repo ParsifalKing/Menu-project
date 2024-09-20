@@ -115,11 +115,11 @@ public class IngredientService(ILogger<IngredientService> logger, IFileService f
         {
             logger.LogInformation("Starting method CreateIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             var existing = await context.Ingredients.AnyAsync(x => x.Name == createIngredient.Name && x.Description == createIngredient.Description);
-            if (existing == true)
+            if (existing)
             {
-                logger.LogInformation("This ingredient with name:{IngredientName} and decsription:{IngredientDescription} already exist. Error in time:{DateTime}",
+                logger.LogInformation("This ingredient with name:{IngredientName} and description:{IngredientDescription} already exist. Error in time:{DateTime}",
                                     createIngredient.Name, createIngredient.Description, DateTime.UtcNow);
-                return new Response<string>(HttpStatusCode.InternalServerError, $"This ingredient with name:{createIngredient.Name} and decsription:{createIngredient.Description} already exist");
+                return new Response<string>(HttpStatusCode.InternalServerError, $"This ingredient with name:{createIngredient.Name} and description:{createIngredient.Description} already exist");
             }
             if (createIngredient.Price < 0 || createIngredient.Count < 0)
             {
@@ -168,10 +168,10 @@ public class IngredientService(ILogger<IngredientService> logger, IFileService f
             if (existing == null)
             {
                 logger.LogWarning("Ingredient not found by id:{Id},time:{Time}", updateIngredient.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest, $"Not found Ingredient by id:{updateIngredient.Id}");
+                return new Response<string>(HttpStatusCode.BadRequest, $"Not found Ingredient by id:{updateIngredient.Id}");
             }
 
-            existing!.Name = updateIngredient.Name;
+            existing.Name = updateIngredient.Name;
             existing.Description = updateIngredient.Description;
             existing.Count = updateIngredient.Count;
             existing.Price = updateIngredient.Price;
@@ -206,10 +206,10 @@ public class IngredientService(ILogger<IngredientService> logger, IFileService f
         {
             logger.LogInformation("Starting method DeleteIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var Ingredient = await context.Ingredients.Where(x => x.Id == ingredientId).ExecuteDeleteAsync();
+            var ingredient = await context.Ingredients.Where(x => x.Id == ingredientId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteIngredientAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
-            return Ingredient == 0
+            return ingredient == 0
                 ? new Response<bool>(HttpStatusCode.BadRequest, $"Ingredient not found by id:{ingredientId}")
                 : new Response<bool>(true);
         }

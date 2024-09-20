@@ -199,10 +199,10 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
         {
             logger.LogInformation("Starting method CreateOrderAsync in time:{DateTime} ", DateTimeOffset.UtcNow);
             var checkedBlockOrdering = await context.BlockOrderControl.FirstAsync(x => x.Id == 1);
-            if (checkedBlockOrdering.IsBlocked == true)
+            if (checkedBlockOrdering.IsBlocked)
             {
                 logger.LogWarning("ordering is blocked now, in time:{DateTime}", DateTime.UtcNow);
-                return new Response<string>(HttpStatusCode.BadRequest, "Execuse, but ordering blocked now");
+                return new Response<string>(HttpStatusCode.BadRequest, "Sorry, but ordering blocked now");
             }
             var user = await context.Users.FirstOrDefaultAsync(x => x.Id == createOrder.UserId);
             foreach (var orderDetail in createOrder.OrderDetails)
@@ -214,8 +214,8 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                 }
                 if (orderDetail.DishId != null && orderDetail.DrinkId != null)
                 {
-                    logger.LogWarning("Error, one OrderDetail connot have a dish and drink");
-                    return new Response<string>(HttpStatusCode.BadRequest, "Error, one OrderDetail connot have a dish and drink");
+                    logger.LogWarning("Error, one OrderDetail cannot have a dish and drink");
+                    return new Response<string>(HttpStatusCode.BadRequest, "Error, one OrderDetail cannot have a dish and drink");
                 }
                 if (orderDetail.DishId == null && orderDetail.DrinkId == null)
                 {
@@ -271,7 +271,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                                                select dr.CookingTimeInMinutes * od.Quantity)
                                           .SumAsync(x => x);
 
-            order!.OrderTimeInMinutes = totalDishCookingTime + totalDrinkCookingTime + 5;
+            order.OrderTimeInMinutes = totalDishCookingTime + totalDrinkCookingTime + 5;
 
             order.TotalAmount = context.OrderDetails.Where(x => x.OrderId == order.Id).Sum(x => x.UnitPrice * x.Quantity);
 
@@ -301,8 +301,8 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                         {
                             if (item.Ingredients.Count < item.DishIngredient.Quantity)
                             {
-                                logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enought", item.Ingredients.Id);
-                                return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enought");
+                                logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enough", item.Ingredients.Id);
+                                return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enough");
                             }
                             item.Ingredients.Count -= item.DishIngredient.Quantity * orderDetail.Quantity;
                             if (item.Ingredients.Count > 2) item.Ingredients.IsInReserve = true;
@@ -324,15 +324,15 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                                            }).AsQueryable();
 
 
-                    if (drinkIngredient != null && drinkIngredient.Any())
+                    if (drinkIngredient.Any())
                     {
                         Guid drinkId = Guid.Empty;
                         foreach (var item in drinkIngredient)
                         {
                             if (item.Ingredients.Count < item.DrinkIngredient.Quantity)
                             {
-                                logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enought", item.Ingredients.Id);
-                                return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enought");
+                                logger.LogWarning("Ups, count of ingredient with id:{IngredientId} not enough", item.Ingredients.Id);
+                                return new Response<string>(HttpStatusCode.BadRequest, $"Ups, count of ingredient with id:{item.Ingredients.Id} not enough");
                             }
                             item.Ingredients.Count -= item.DrinkIngredient.Quantity * orderDetail.Quantity;
                             if (item.Ingredients.Count > 2) item.Ingredients.IsInReserve = true;
@@ -378,7 +378,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
             if (existing == null)
             {
                 logger.LogWarning("Order not found by id:{Id},time:{Time}", updateOrder.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest, $"Not found Order by id:{updateOrder.Id}");
+                return new Response<string>(HttpStatusCode.BadRequest, $"Not found Order by id:{updateOrder.Id}");
             }
 
             var totalCookingTime = await (from od in context.OrderDetails
@@ -387,7 +387,7 @@ ICheckIngredientsService checkIngredientsService, INotificationService notificat
                                           select d.CookingTimeInMinutes * od.Quantity)
                                           .SumAsync(x => x);
 
-            existing!.OrderTimeInMinutes = totalCookingTime + 5;
+            existing.OrderTimeInMinutes = totalCookingTime + 5;
             existing.TotalAmount = context.OrderDetails.Where(x => x.OrderId == updateOrder.Id).Sum(x => x.UnitPrice * x.Quantity);
             existing.OrderStatus = updateOrder.OrderStatus;
             existing.UpdatedAt = DateTimeOffset.UtcNow;

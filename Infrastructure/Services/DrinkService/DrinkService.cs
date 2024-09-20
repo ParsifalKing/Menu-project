@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 namespace Infrastructure.Services.DrinkService;
 
 public class DrinkService(ILogger<DrinkService> logger, IFileService fileService, DataContext context,
- ICheckIngredientsService checkDrinkIngredientsService, IDrinkIngredientService DrinkIngredientService) : IDrinkService
+ ICheckIngredientsService checkDrinkIngredientsService, IDrinkIngredientService drinkIngredientService) : IDrinkService
 {
 
     #region GetDrinksAsync
@@ -163,12 +163,12 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
             logger.LogInformation("Starting method CreateDrinkAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
             if (createDrink.DrinkIngredients != null)
             {
-                foreach (var DrinkIngredient in createDrink.DrinkIngredients)
+                foreach (var drinkIngredient in createDrink.DrinkIngredients)
                 {
-                    if (DrinkIngredient.Quantity <= 0)
+                    if (drinkIngredient.Quantity <= 0)
                     {
                         logger.LogWarning("Error 400, quantity of ingredients for Drink cannot be negative. Time{DateTime}", DateTime.UtcNow);
-                        return new Response<string>(HttpStatusCode.BadRequest, $"Quantity of ingredients for Drink cannot be negative: {DrinkIngredient.Quantity}");
+                        return new Response<string>(HttpStatusCode.BadRequest, $"Quantity of ingredients for Drink cannot be negative: {drinkIngredient.Quantity}");
                     }
                 }
             }
@@ -206,7 +206,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
                         Quantity = drinkIngredient.Quantity,
                         Description = drinkIngredient.Description,
                     };
-                    var res = await DrinkIngredientService.CreateDrinkIngredientAsync(drinkIngredientForCreateDrink);
+                    var res = await drinkIngredientService.CreateDrinkIngredientAsync(drinkIngredientForCreateDrink);
                     if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of Drink (CreateDrinkIngredient)");
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of Drink (CreateDrinkIngredient)");
                 }
@@ -261,15 +261,15 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
             if (existing == null)
             {
                 logger.LogWarning("Drink not found by id:{Id},time:{Time}", updateDrink.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest, $"Not found Drink by id:{updateDrink.Id}");
+                return new Response<string>(HttpStatusCode.BadRequest, $"Not found Drink by id:{updateDrink.Id}");
             }
 
             var foundDrinkIngredients = await context.DrinksIngredients.Where(x => x.DrinkId == updateDrink.Id).ToListAsync();
-            if (foundDrinkIngredients != null) context.DrinksIngredients.RemoveRange(foundDrinkIngredients);
+            if (foundDrinkIngredients.Any()) context.DrinksIngredients.RemoveRange(foundDrinkIngredients);
 
 
             bool areAllIngredients = await checkDrinkIngredientsService.CheckDrinkIngredients(updateDrink.Id);
-            existing!.AreAllIngredients = areAllIngredients;
+            existing.AreAllIngredients = areAllIngredients;
             existing.Name = updateDrink.Name;
             existing.Description = updateDrink.Description;
             existing.CookingTimeInMinutes = updateDrink.CookingTimeInMinutes;
@@ -289,7 +289,7 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
                 foreach (var drinkIngredient in updateDrink.DrinkIngredients)
                 {
                     drinkIngredient.DrinkId = existing.Id;
-                    var res = await DrinkIngredientService.CreateDrinkIngredientAsync(drinkIngredient);
+                    var res = await drinkIngredientService.CreateDrinkIngredientAsync(drinkIngredient);
                     if (res.StatusCode >= 400 && res.StatusCode <= 499) return new Response<string>(HttpStatusCode.BadRequest, "Error 400 while saving ingredient of Drink (CreateDrinkIngredient)");
                     if (res.StatusCode >= 500 && res.StatusCode <= 599) return new Response<string>(HttpStatusCode.InternalServerError, "Error 500 while saving ingredient of Drink (CreateDrinkIngredient)");
                 }
@@ -316,10 +316,10 @@ public class DrinkService(ILogger<DrinkService> logger, IFileService fileService
         {
             logger.LogInformation("Starting method DeleteDrinkAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
 
-            var Drink = await context.Drinks.Where(x => x.Id == drinkId).ExecuteDeleteAsync();
+            var drink = await context.Drinks.Where(x => x.Id == drinkId).ExecuteDeleteAsync();
 
             logger.LogInformation("Finished method DeleteDrinkAsync at time:{DateTime} ", DateTimeOffset.UtcNow);
-            return Drink == 0
+            return drink == 0
                 ? new Response<bool>(HttpStatusCode.BadRequest, $"Drink not found by id:{drinkId}")
                 : new Response<bool>(true);
         }

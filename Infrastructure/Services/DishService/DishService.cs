@@ -14,7 +14,6 @@ using Infrastructure.Services.DishIngredientService;
 using Infrastructure.Services.FileService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Org.BouncyCastle.Math.EC.Rfc7748;
 
 namespace Infrastructure.Services.DishService;
 
@@ -350,14 +349,14 @@ public class DishService(ILogger<DishService> logger, IFileService fileService, 
             if (existing == null)
             {
                 logger.LogWarning("Dish not found by id:{Id},time:{Time}", updateDish.Id, DateTimeOffset.UtcNow);
-                new Response<string>(HttpStatusCode.BadRequest, $"Not found Dish by id:{updateDish.Id}");
+                return new Response<string>(HttpStatusCode.BadRequest, $"Not found Dish by id:{updateDish.Id}");
             }
 
             var foundDishIngredients = await context.DishesIngredients.Where(x => x.DishId == updateDish.Id).ToListAsync();
-            if (foundDishIngredients != null) context.DishesIngredients.RemoveRange(foundDishIngredients);
+            if (foundDishIngredients.Any()) context.DishesIngredients.RemoveRange(foundDishIngredients);
 
             bool areAllIngredients = await checkDishIngredientsService.CheckDishIngredients(updateDish.Id);
-            existing!.AreAllIngredients = areAllIngredients;
+            existing.AreAllIngredients = areAllIngredients;
             existing.Name = updateDish.Name;
             existing.Description = updateDish.Description;
             existing.CookingTimeInMinutes = updateDish.CookingTimeInMinutes;
